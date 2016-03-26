@@ -1,11 +1,10 @@
-module Boomerang.Prim where
+module Text.Boomerang.Prim where
 
-import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
-import Prelude (bind, class Category, class Semigroupoid, return, Unit, (<<<), (>>=))
+import Prelude (bind, class Category, class Semigroupoid, id, return, (<<<), (>>=))
 
 newtype Serializer tok a b = Serializer (a -> Maybe (Tuple (tok -> tok) b))
 
@@ -37,13 +36,10 @@ instance semigroupoidCategory :: Semigroupoid (Boomerang tok) where
         prs : composePrs (b1.prs) (b2.prs)
       , ser : composeSer (b2.ser) (b1.ser)
     }
-   where
 
-    p = b1.prs
-
--- instance boomerangCategory :: Category (Boomerang tok) where
---   id = Boomerang {
---       prs : return (Just . id)
---     , ser : Just . (Tuple id) . id
---   }
+instance boomerangCategory :: Category (Boomerang tok) where
+  id = Boomerang {
+      prs : return (Just <<< id)
+    , ser : Serializer (Just <<< (Tuple id) <<< id)
+  }
 
