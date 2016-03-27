@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
 import Prelude (bind, compose, class Category, class Semigroupoid,
-                class Semigroup, id, return, (<<<), (>>=), (<$>))
+                class Semigroup, id, return, (<<<))
 
 newtype Serializer tok a b = Serializer (a -> Maybe (Tuple (tok -> tok) b))
 
@@ -22,17 +22,17 @@ instance semigroupoidSerializer :: Semigroupoid (Serializer tok) where
 instance categorySerializer :: Category (Serializer tok) where
   id = Serializer (Just <<< (Tuple id) <<< id)
 
-composePrs :: forall tok a b c. Parser tok (b -> Maybe c) ->
-                                Parser tok (a -> Maybe b) ->
-                                Parser tok (a -> Maybe c)
+composePrs :: forall tok a b c. Parser tok (b -> c) ->
+                                Parser tok (a -> b) ->
+                                Parser tok (a -> c)
 composePrs prs1 prs2 = do
-  a2mb <- prs2
-  b2mc <- prs1
-  return (\a -> (a2mb a >>= b2mc))
+  a2b <- prs2
+  b2c <- prs1
+  return (b2c <<< a2b)
 
 data Boomerang tok a b =
   Boomerang {
-      prs :: Parser tok (a -> Maybe b)
+      prs :: Parser tok (a -> b)
     , ser :: Serializer tok b a
   }
 
@@ -45,7 +45,7 @@ instance semigroupoidBoomerang :: Semigroupoid (Boomerang tok) where
 
 instance categoryBoomerang :: Category (Boomerang tok) where
   id = Boomerang {
-      prs : return (Just <<< id)
+      prs : return id
     , ser : id
   }
 
