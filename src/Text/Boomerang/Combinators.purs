@@ -3,7 +3,7 @@ module Text.Boomerang.Combinators where
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (id, return, (<$>), (<<<))
+import Prelude (compose, id, return, (<$>), (<<<), (<>))
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Boomerang.HStack (hArg, hMap, HCons(..), HTop2)
 
@@ -29,3 +29,6 @@ cons =
   ser (HCons (Cons lh lt) t) = Just (HCons lh (HCons lt t))
   ser _ = Nothing
 
+list :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> Boomerang tok t (HCons (List a) t)
+list b =
+   (cons `compose` b `compose` list b) <> nil
