@@ -4,7 +4,7 @@ import Control.Monad.Eff.Console
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
-import Prelude (bind, compose, class Category, class Semigroupoid, id, return, (<<<), (>>=))
+import Prelude (bind, compose, class Category, class Semigroupoid, id, return, (<<<), (>>=), (<$>))
 
 newtype Serializer tok a b = Serializer (a -> Maybe (Tuple (tok -> tok) b))
 
