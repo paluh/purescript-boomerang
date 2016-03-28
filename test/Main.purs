@@ -5,10 +5,11 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console
 import Control.Error.Util (hush)
 import Data.Maybe (Maybe)
+import Data.List (List(..), (:))
 import Data.String (toCharArray)
 import Data.Tuple (Tuple(..))
 import Prelude (bind, compose, const, return, show, Unit, (<>), ($), (<<<))
-import Text.Boomerang.HStack (hCons, HCons, hHead, HNil, hNil)
+import Text.Boomerang.HStack (hCons, HCons, hHead, HNil, hNil, hSingleton)
 import Text.Boomerang.Combinators (cons, list, nil)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer)
 import Text.Boomerang.String (int, lit, manyOf, string, StringBoomerang)
@@ -33,7 +34,12 @@ main = do
   log (show (parse t "test"))
   log (show (parse f "test"))
   log (show (parse (f <> t) "test"))
-  log (show (parse (cons `compose` t `compose` cons `compose` f `compose` nil) "testfesttest"))
+
+  let tf = (cons `compose` t `compose` cons `compose` f `compose` nil)
+
+  log (show (parse tf "testfesttest"))
+  log (show (serialize tf (hSingleton ("test" : "fest" : Nil))))
+
   log (show (parse (list (t <> f)) "testtesttestfesttest"))
   log (show (parse (cons `compose` digits `compose` cons `compose` t `compose` nil) "8889test"))
   log (show (parse (cons `compose` int `compose` lit "/" `compose` cons `compose` int `compose` nil) "8889/999"))
