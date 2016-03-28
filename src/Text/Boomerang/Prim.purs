@@ -1,14 +1,19 @@
 module Text.Boomerang.Prim where
 
 import Control.Alt ((<|>))
+import Control.Lazy (class Lazy, defer)
 import Control.Monad.Eff.Console
 import Data.Maybe (Maybe(..))
+import Debug.Trace (trace)
 import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
-import Prelude (bind, compose, class Category, class Semigroupoid,
-                class Semigroup, id, return, (<<<))
+import Prelude (bind, compose, const, class Category, class Semigroupoid,
+                class Semigroup, id, return, unit, (<<<), ($))
 
 newtype Serializer tok a b = Serializer (a -> Maybe (Tuple (tok -> tok) b))
+
+instance lazySerializer :: Lazy (Serializer tok a b) where
+  defer f = Serializer (\a -> runSerializer (f unit) a)
 
 runSerializer :: forall a b tok. Serializer tok a b -> (a -> Maybe (Tuple (tok -> tok) b))
 runSerializer (Serializer f) = f
@@ -26,8 +31,9 @@ composePrs :: forall tok a b c. Parser tok (b -> c) ->
                                 Parser tok (a -> b) ->
                                 Parser tok (a -> c)
 composePrs prs1 prs2 = do
-  a2b <- prs2
   b2c <- prs1
+  trace ("successful parse") (const $ return unit)
+  a2b <- prs2
   return (b2c <<< a2b)
 
 data Boomerang tok a b =
@@ -55,3 +61,15 @@ instance semigroupBoomerang :: Semigroup (Boomerang tok a b) where
         prs : (b1.prs <|> b2.prs)
       , ser : Serializer (\b -> (runSerializer b1.ser b) <|> (runSerializer b2.ser b))
     }
+
+instance lazyBoomerang :: Lazy (Boomerang tok a b) where
+    defer f =
+      Boomerang {
+          prs : defer' (_.prs)
+        , ser : defer'' (_.ser)
+      }
+     where
+      -- defer' a = defer (\_ -> trace "evaluation?" (const $ (case f unit of (Boomerang b) -> a b)))
+      defer' a = defer (\_ -> trace "evaluation?" (const $ (case f unit of (Boomerang b) -> a b)))
+      defer'' a = defer (const (case f unit of (Boomerang b) -> a b))
+

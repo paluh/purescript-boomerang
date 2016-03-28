@@ -1,9 +1,10 @@
 module Text.Boomerang.Combinators where
 
+import Control.Lazy (defer)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (compose, id, return, (<$>), (<>))
+import Prelude (compose, const, id, return, (<$>), (<>), ($))
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Boomerang.HStack (hArg, hMap, HCons(..), HTop2)
@@ -37,4 +38,4 @@ cons =
   ser _ = Nothing
 
 list :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> Boomerang tok t (HCons (List a) t)
-list b = (cons `compose` b `compose` list b) <> nil
+list b = (cons `compose` b `compose` defer (\_ -> list b)) <> nil

@@ -16,11 +16,16 @@
     "purescript-control": "0.3.2",
     "purescript-errors": "0.2.0",
     "purescript-foldable-traversable": "0.4.2",
+    "purescript-lazy": "0.4.0",
     "purescript-lists": "0.7.10",
     "purescript-monoid": "0.3.2",
     "purescript-nonempty-arrays": "0.3.0",
     "purescript-parsing": "^0.8.0",
     "purescript-prelude": "^0.1.4",
+    "purescript-transformers": "0.8.4",
     "purescript-tuples": "^0.4.0"
+  },
+  "devDependencies": {
+    "purescript-debug": "^0.1.3"
   }
 }

@@ -7,7 +7,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.String (fromChar, toCharArray)
 import Prelude (compose, const, id, (<$>), (<>), (<<<), (==))
-import Text.Boomerang.Combinators (list, pure, pureSer)
+import Text.Boomerang.Combinators (list, pure)
 import Text.Boomerang.HStack (hCons, HCons(..), hMap)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Parsing.Parser.String
@@ -25,12 +25,12 @@ string :: forall r. String -> StringBoomerang r (HCons String r)
 string s =
   Boomerang {
       prs : (hCons <$> Text.Parsing.Parser.String.string s)
-    , ser : pureSer ser
+    , ser : Serializer ser
   }
  where
   ser (HCons s' t) =
     if s' == s
-      then Just t
+      then Just (Tuple (s <> _) t)
       else Nothing
 
 oneOf :: forall r. NonEmpty Char -> StringBoomerang r (HCons Char r)
