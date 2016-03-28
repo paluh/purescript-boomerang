@@ -12,7 +12,6 @@ import Text.Boomerang.HStack (hCons, HCons, hHead, HNil, hNil)
 import Text.Boomerang.Combinators (cons, list, nil)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer)
 import Text.Boomerang.String (int, lit, manyOf, string, StringBoomerang)
--- import Text.Boomerang.Urls ((</>))
 import Text.Parsing.Parser (runParser)
 
 parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
@@ -30,6 +29,7 @@ main = do
   let t = (string "test" :: forall t. Boomerang String t (HCons String t))
       f = (string "fest" :: forall t. Boomerang String t (HCons String t))
       digits = (manyOf "0123456789")
+
   log (show (parse t "test"))
   log (show (parse f "test"))
   log (show (parse (f <> t) "test"))
