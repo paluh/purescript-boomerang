@@ -8,17 +8,22 @@ import Data.Maybe (Maybe)
 import Data.List (List(..), (:))
 import Data.String (toCharArray)
 import Data.Tuple (Tuple(..))
-import Prelude (bind, compose, const, return, show, Unit, (<>), ($), (<<<))
+import Prelude (bind, compose, const, return, show, Unit, unit, (<>), ($), (<<<))
 import Text.Boomerang.HStack (hCons, HCons, hHead, HNil, hNil, hSingleton)
 import Text.Boomerang.Combinators (cons, list, nil)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer)
-import Text.Boomerang.String (int, lit, manyOf, string, StringBoomerang)
+import Text.Boomerang.Routing ((</>))
+import Text.Boomerang.String (int, lit, string, StringBoomerang)
 import Text.Parsing.Parser (runParser)
+import Unsafe.Coerce (unsafeCoerce)
 
-parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
+parse :: forall a r. StringBoomerang r (HCons a r) -> String -> Maybe a
 parse (Boomerang b) s = do
   f <- hush (runParser s b.prs)
-  return (hHead (f hNil))
+  return (hHead (f todo))
+
+todo :: forall a. a
+todo = unsafeCoerce unit
 
 serialize :: forall a t. StringBoomerang HNil (HCons a t) -> (HCons a t) -> Maybe String
 serialize (Boomerang b) s = do
@@ -27,19 +32,25 @@ serialize (Boomerang b) s = do
 
 main :: forall a. Eff ( console :: CONSOLE | a) Unit
 main = do
-  let t = (string "test" :: forall t. Boomerang String t (HCons String t))
-      f = (string "fest" :: forall t. Boomerang String t (HCons String t))
-      digits = (manyOf "0123456789")
+  let foo = string "foo"
+      bar = string "bar"
+      fooBar = (cons `compose` foo `compose` cons `compose` bar `compose` nil)
+      -- fooOrBar = foo <> bar
+      -- fooOrBarList = list fooOrBar
+      -- fooOrBarList = list fooBar
 
-  log (show (parse t "test"))
-  log (show (parse f "test"))
-  log (show (parse (f <> t) "test"))
+  log (show (parse foo "foo"))
+  log (show (parse bar "foo"))
+  log (show (parse fooBar "foobar"))
+  log (show (parse fooBar "barfoo"))
+  -- log (show (parse fooOrBar "bar"))
+  -- log (show (parse fooOrBar "foo"))
+  -- log (show (serialize fooBar (hSingleton ("foo" : "bar" : Nil))))
 
-  let tf = (cons `compose` t `compose` cons `compose` f `compose` nil)
+  -- log (show (parse fooOrBarList "foofoofoobarfoobar"))
+  -- log (show (serialize fooOrBarList (hSingleton ("bar": "foo": "foo" : "bar" : Nil))))
 
-  log (show (parse tf "testfesttest"))
-  log (show (serialize tf (hSingleton ("test" : "fest" : Nil))))
-
-  log (show (parse (list (t <> f)) "testtesttestfesttest"))
-  log (show (parse (cons `compose` digits `compose` cons `compose` t `compose` nil) "8889test"))
-  log (show (parse (cons `compose` int `compose` lit "/" `compose` cons `compose` int `compose` nil) "8889/999"))
+  -- log (show (parse (list (t <> f)) "testtesttestfesttest"))
+  -- log (show (parse (cons `compose` digits `compose` cons `compose` t) "8889test"))
+  -- log (show (parse (cons `compose` int `compose` lit "/" `compose` cons `compose` int) "8889/999"))
+  -- log (show (parse (int </> int) "8889/999"))

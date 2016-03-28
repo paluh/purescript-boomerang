@@ -64,9 +64,12 @@ many1Of a =
   prs = hMap fromCharList
   ser h = Just (hMap (fromFoldable <<< toCharArray) h)
 
+digits :: forall r. StringBoomerang r (HCons String r)
+digits = many1Of "0123456789"
+
 int :: forall r. StringBoomerang r (HCons Int r)
 int =
-  maph intPrs intSer `compose` many1Of "0123456789"
+  maph intPrs intSer `compose` digits
  where
   intPrs :: String -> Int
   intPrs s = fromMaybe 0 (fromString s)

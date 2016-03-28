@@ -8,7 +8,6 @@ import Prelude (compose, flip, id, return, (<$>), (<>), unit)
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), HTop2)
-import Unsafe.Coerce (unsafeCoerce)
 
 pureSer :: forall a b tok. (a -> Maybe b) -> Serializer tok a b
 pureSer s = Serializer ((Tuple id <$> _) <$> s)
@@ -22,9 +21,6 @@ pure p s =
       prs : purePrs p
     , ser : pureSer s
   }
-
-todo :: forall a. a
-todo = unsafeCoerce unit
 
 maph :: forall h h' t tok. (h -> h') -> (h' -> Maybe h) ->
                            Boomerang tok (HCons h t) (HCons h' t)
