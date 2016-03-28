@@ -4,10 +4,11 @@ import Control.Lazy (defer)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (compose, id, return, (<$>), (<>))
+import Prelude (compose, flip, id, return, (<$>), (<>), unit)
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
-import Text.Boomerang.HStack (hArg, hMap, HCons(..), HTop2)
+import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), HTop2)
+import Unsafe.Coerce (unsafeCoerce)
 
 pureSer :: forall a b tok. (a -> Maybe b) -> Serializer tok a b
 pureSer s = Serializer ((Tuple id <$> _) <$> s)
@@ -21,6 +22,24 @@ pure p s =
       prs : purePrs p
     , ser : pureSer s
   }
+
+todo :: forall a. a
+todo = unsafeCoerce unit
+
+maph :: forall h h' t tok. (h -> h') -> (h' -> Maybe h) ->
+                           Boomerang tok (HCons h t) (HCons h' t)
+maph p s =
+  pure prs ser
+ where
+  prs :: HCons h t -> HCons h' t
+  prs = hArg hCons p
+
+  ser :: HCons h' t -> Maybe (HCons h t)
+  ser =
+    hArg hCons' s
+   where
+    hCons' :: forall a s. Maybe a -> s -> Maybe (HCons a s)
+    hCons' mh t  = flip hCons t <$> mh
 
 nil :: forall t a tok. Boomerang tok t (HCons (List a) t)
 nil =

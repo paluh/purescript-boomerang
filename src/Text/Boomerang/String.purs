@@ -1,13 +1,13 @@
-module Text.Boomerang.Strings where
+module Text.Boomerang.String where
 
-import Data.Array.NonEmpty (NonEmpty, toArray)
 import Data.Foldable (class Foldable, elem, foldMap)
+import Data.Int (fromString)
 import Data.List (fromFoldable)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.String (fromChar, toCharArray)
-import Prelude (compose, const, id, (<$>), (<>), (<<<), (==))
-import Text.Boomerang.Combinators (list, pure)
+import Prelude (compose, const, id, show, (<$>), (<>), (<<<), (==))
+import Text.Boomerang.Combinators (cons, list, maph, pure)
 import Text.Boomerang.HStack (hCons, HCons(..), hMap)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Parsing.Parser.String
@@ -33,14 +33,13 @@ string s =
       then Just (Tuple (s <> _) t)
       else Nothing
 
-oneOf :: forall r. NonEmpty Char -> StringBoomerang r (HCons Char r)
-oneOf na =
+oneOf :: forall r. Array Char -> StringBoomerang r (HCons Char r)
+oneOf a =
   Boomerang {
       prs : (hCons <$> Text.Parsing.Parser.String.oneOf a)
     , ser : Serializer ser
   }
  where
-  a = toArray na
   ser (HCons c t) =
     if c `elem` a
       then Just (Tuple (fromChar c <>  _) t)
@@ -49,9 +48,28 @@ oneOf na =
 fromCharList :: forall f. Foldable f => f Char -> String
 fromCharList = foldMap fromChar
 
-manyOf :: forall r. NonEmpty Char -> StringBoomerang r (HCons String r)
-manyOf na =
-  pure prs ser `compose` list (oneOf na)
+manyOf :: forall r. String -> StringBoomerang r (HCons String r)
+manyOf a =
+  pure prs ser `compose` list (oneOf a')
  where
+  a' = toCharArray a
   prs = hMap fromCharList
   ser h = Just (hMap (fromFoldable <<< toCharArray) h)
+
+many1Of :: forall r. String -> StringBoomerang r (HCons String r)
+many1Of a =
+  pure prs ser `compose` cons `compose` oneOf a' `compose` list (oneOf a')
+ where
+  a' = toCharArray a
+  prs = hMap fromCharList
+  ser h = Just (hMap (fromFoldable <<< toCharArray) h)
+
+int :: forall r. StringBoomerang r (HCons Int r)
+int =
+  maph intPrs intSer `compose` many1Of "0123456789"
+ where
+  intPrs :: String -> Int
+  intPrs s = fromMaybe 0 (fromString s)
+
+  intSer :: Int -> Maybe String
+  intSer i = Just (show i)
