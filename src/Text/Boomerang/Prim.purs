@@ -24,7 +24,7 @@ instance semigroupoidSerializer :: Semigroupoid (Serializer tok) where
     return (Tuple (t2 <<< t1) a))
 
 instance categorySerializer :: Category (Serializer tok) where
-  id = Serializer (Just <<< (Tuple id) <<< id)
+  id = Serializer (Just <<< Tuple id)
 
 composePrs :: forall tok a b c. Parser tok (b -> c) ->
                                 Parser tok (a -> b) ->
