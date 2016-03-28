@@ -6,9 +6,9 @@ import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.String (fromChar, toCharArray)
-import Prelude (compose, const, id, show, (<$>), (<>), (<<<), (==))
+import Prelude (compose, const, id, show, Unit, (<$>), (<>), (<<<), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pure)
-import Text.Boomerang.HStack (hCons, HCons(..), hMap)
+import Text.Boomerang.HStack (class HList, hCons, HCons(..), hMap)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Parsing.Parser.String
 
@@ -67,7 +67,8 @@ many1Of a =
 digits :: forall r. StringBoomerang r (HCons String r)
 digits = many1Of "0123456789"
 
-int :: forall r. StringBoomerang r (HCons Int r)
+-- int :: forall r. Unit -> StringBoomerang r (HCons Int r)
+int :: forall r. (HList r) => Boomerang String r (HCons Int r)
 int =
   maph intPrs intSer `compose` digits
  where

@@ -5,10 +5,20 @@ import Prelude ((<<<))
 data HNil = HNil
 data HCons a b = HCons a b
 
+class HList r
+instance hlistNil :: HList HNil
+instance hlistConst :: (HList t) => HList (HCons a t)
+
 type HTop2 a b t = HCons a (HCons b t)
 type HTop3 a b c t = HCons a (HTop2 b c t)
 type HTop4 a b c d t = HCons a (HTop3 b c d t)
 type HTop5 a b c d e t = HCons a (HTop4 b c d e t)
+
+hTop2 :: forall a b t. a -> b -> t -> HTop2 a b t
+hTop2 a b t = hCons a (hCons b t)
+
+hTop3 :: forall a b c t. a -> b -> c -> t -> HTop3 a b c t
+hTop3 a b c t = hCons a (hTop2 b c t)
 
 hNil :: HNil
 hNil = HNil

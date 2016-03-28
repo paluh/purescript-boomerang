@@ -24,6 +24,7 @@
     "purescript-control": "0.3.2",
     "purescript-errors": "0.2.0",
     "purescript-foldable-traversable": "0.4.2",
+    "purescript-generics": "0.7.2",
     "purescript-lazy": "0.4.0",
     "purescript-lists": "0.7.10",
     "purescript-monoid": "0.3.2",
