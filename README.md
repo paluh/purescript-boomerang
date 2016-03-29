@@ -1,7 +1,7 @@
-### purescript-boomerang
+### purescript-boomerang - typesafe bidirectional routing
 
-This library contains (basic) implementation of invertible parserers and priters. Using these (semi)isomorphic stuctures with provided combinators should allow simple definition of bidirectional web routes, so URL path can be transfored to value and value can transfored into URL path.
+This library implements invertible parserers (it is clone of haskell boomerang library). With these (semi)isomorphic stuctures and provided combinators it's quite easy to define bidirectional web routes (example.
 
-This is an attempt to create purescript clone of haskell's boomerang library, and it is really early stage of developement...
+I'm still experimenting with the implementation, so error handling doesn't exist etc.
 
 Look into `test/Main.purs` for some simple examples...
