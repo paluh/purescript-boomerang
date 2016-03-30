@@ -1,18 +1,22 @@
 module Test.Main where
 
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console
+import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Error.Util (hush)
-import Data.Generic (class Generic, gShow)
-import Data.List (List(..), (:))
+import Data.Generic (class Generic, gEq, gShow)
+import Data.List ((:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (bind, class Show, compose, return, show, Unit, unit, (<>), (==))
+import Prelude (bind, class Eq, class Show, compose, return, show, Unit, unit, (<>), (==))
+import Test.Unit (test, runTest, TIMER)
+import Test.Unit.Console (TESTOUTPUT)
+import Test.Unit.Assert (assert)
 import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hHead, HNil, hNil, hSingleton, hTop2, HTop2)
-import Text.Boomerang.Combinators (cons, list, nil, pure)
+import Text.Boomerang.Combinators (cons, list, nil, opt, pure)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer)
 import Text.Boomerang.Routing ((</>))
-import Text.Boomerang.String (int, string, StringBoomerang)
+import Text.Boomerang.String (int, lit, string, StringBoomerang)
 import Text.Parsing.Parser (runParser)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -42,16 +46,20 @@ derive instance genericProfile :: Generic Profile
 instance showProfile :: Show Profile where
   show = gShow
 
--- this route definition is not very... concise ;-)
+instance eqProfile :: Eq Profile where
+  eq = gEq
+
 profileR :: forall r. (HList r) => StringBoomerang r (HCons Profile r)
 profileR =
-  pr `compose` int </> vr
+  lit "profile" </> pR `compose` int </> pvR `compose` opt (lit "/")
  where
-  pr :: forall t. StringBoomerang (HTop2 Int ProfileViewMode t) (HCons Profile t)
-  pr = pure (hArg (hArg hCons) (\i v -> Profile { id : i, view : v})) (\(HCons (Profile p) t) -> Just (hTop2 p.id p.view t))
+  -- Profile route
+  pR :: forall t. StringBoomerang (HTop2 Int ProfileViewMode t) (HCons Profile t)
+  pR = pure (hArg (hArg hCons) (\i v -> Profile { id : i, view : v})) (\(HCons (Profile p) t) -> Just (hTop2 p.id p.view t))
 
-  vr :: forall t. StringBoomerang t (HCons ProfileViewMode t)
-  vr =
+  -- ProfileView route
+  pvR :: forall t. StringBoomerang t (HCons ProfileViewMode t)
+  pvR =
     vb `compose` (string "compact" <> string "extended")
    where
     vb = pure (hArg (hCons) (\s -> if s == "compact" then Compact else Extended))
@@ -59,25 +67,37 @@ profileR =
     ser (HCons Compact t) = Just (hCons "compact" t)
     ser (HCons Extended t) = Just (hCons "extended" t)
 
-main :: forall a. Eff ( console :: CONSOLE | a) Unit
-main = do
-  let foo = (string "foo" :: forall r. StringBoomerang r (HCons String r))
-      bar = (string "bar" :: forall r. StringBoomerang r (HCons String r))
-      fooBar = (cons `compose` foo `compose` cons `compose` bar `compose` nil)
-      fooOrBar = (string "foo" <> string "bar")
-      fooOrBarList = list (string "foo" <> string "bar")
-      -- fooOrBarList = list fooBar
+main :: forall e. Eff ( timer :: TIMER
+                      , avar :: AVAR
+                      , testOutput :: TESTOUTPUT | e
+                      ) Unit
+main = runTest do
+  test "Profile routes" do
+    let profile = Profile {id: 20, view: Compact}
+    assert "profile route parsing"
+      (parse profileR "profile/20/compact/" == Just profile)
+    assert "profile route parsing without trailing slash"
+      (parse profileR "profile/20/compact/" == Just profile)
+    assert "profile route serialization"
+      ((serialize profileR (hSingleton profile)) == Just "profile/20/compact/")
 
-  log (show (parse foo "foo"))
-  log (show (parse bar "foo"))
-  log (show (parse fooBar "foobar"))
-  log (show (parse fooBar "barfoo"))
-  log (show (parse fooOrBar "bar"))
-  log (show (parse fooOrBar "foo"))
-  log (show (serialize fooBar (hSingleton ("foo" : "bar" : Nil))))
+  -- turn these into basic tests
+  -- let foo = (string "foo" :: forall r. StringBoomerang r (HCons String r))
+  --     bar = (string "bar" :: forall r. StringBoomerang r (HCons String r))
+  --     fooBar = (cons `compose` foo `compose` cons `compose` bar `compose` nil)
+  --     fooOrBar = (string "foo" <> string "bar")
+  --     fooOrBarList = list (string "foo" <> string "bar")
+  --     -- fooOrBarList = list fooBar
 
-  log (show (parse fooOrBarList "foofoofoobarfoobar"))
-  log (show (serialize fooOrBarList (hSingleton ("bar":"foo":"foo":"bar":Nil))))
+  -- log "test"
+  -- log (show (parse foo "foo"))
+  -- log (show (parse bar "foo"))
+  -- log (show (parse fooBar "foobar"))
+  -- log (show (parse fooBar "barfoo"))
+  -- log (show (parse fooOrBar "bar"))
+  -- log (show (parse fooOrBar "foo"))
+  -- log (show (serialize fooBar (hSingleton ("foo" : "bar" : Nil))))
 
-  log (show (parse profileR "10/compact"))
-  log (show (serialize profileR (hSingleton (Profile {id : 20, view : Extended}))))
+  -- log (show (parse fooOrBarList "foofoofoobarfoobar"))
+  -- log (show (serialize fooOrBarList (hSingleton ("bar":"foo":"foo":"bar":Nil))))
+

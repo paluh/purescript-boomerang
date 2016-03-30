@@ -4,7 +4,7 @@ import Control.Lazy (defer)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (compose, flip, id, return, (<$>), (<>), unit)
+import Prelude (compose, flip, id, return, (<$>), (<>))
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), HTop2)
@@ -44,7 +44,7 @@ nil =
   ser (HCons Nil t) = Just t
   ser _ = Nothing
 
-cons :: forall t a tok. Boomerang tok (HTop2 a (List a) t) (HCons (List a) t)
+cons :: forall tok a t. Boomerang tok (HTop2 a (List a) t) (HCons (List a) t)
 cons =
   pure prs ser
  where
@@ -54,3 +54,6 @@ cons =
 
 list :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> Boomerang tok t (HCons (List a) t)
 list b = (cons `compose` b `compose` defer (\_ -> list b)) <> nil
+
+opt :: forall tok t. Boomerang tok t t -> Boomerang tok t t
+opt b = b <> id
