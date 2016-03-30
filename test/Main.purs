@@ -77,7 +77,7 @@ main = runTest do
     assert "profile route parsing"
       (parse profileR "profile/20/compact/" == Just profile)
     assert "profile route parsing without trailing slash"
-      (parse profileR "profile/20/compact/" == Just profile)
+      (parse profileR "profile/20/compact" == Just profile)
     assert "profile route serialization"
       ((serialize profileR (hSingleton profile)) == Just "profile/20/compact/")
 
