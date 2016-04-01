@@ -17,15 +17,11 @@ import Text.Boomerang.Prim (Boomerang(..), runSerializer)
 import Text.Boomerang.Routing ((</>))
 import Text.Boomerang.String (int, lit, string, StringBoomerang)
 import Text.Parsing.Parser (runParser)
-import Unsafe.Coerce (unsafeCoerce)
 
 parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
 parse (Boomerang b) s = do
   f <- hush (runParser s b.prs)
   return (hHead (f hNil))
-
-todo :: forall a. a
-todo = unsafeCoerce unit
 
 serialize :: forall a. StringBoomerang HNil (HCons a HNil) -> a -> Maybe String
 serialize (Boomerang b) s = do
