@@ -27,17 +27,32 @@ serialize (Boomerang b) s = do
   (Tuple f _) <- runSerializer b.ser (hSingleton s)
   return (f "")
 
+data SimplePositionalValue = SimplePositionalValue Int
+derive instance genericSimplePositionalValues :: Generic SimplePositionalValue
+
+data SimplePositionalValues = SimplePositionalValues Int Boolean
+derive instance genericSimplePositionalValue :: Generic SimplePositionalValues
+
 data IntRecord = IntRecord { id :: Int }
 derive instance genericIntRoute :: Generic IntRecord
 
 data IntBoolRecord = IntBoolRecord { id :: Int, bool :: Boolean }
 derive instance genericBooleanIntRoute :: Generic IntBoolRecord
 
+
 main = do
   let booleanRoute = gRoute (Proxy :: Proxy Boolean)
       intRoute = gRoute (Proxy :: Proxy Int)
-  log (show (serialize booleanRoute (Just true)))
-  log (show (serialize intRoute (Just 8)))
+  log (show (serialize booleanRoute true))
+  log (show (serialize intRoute 8))
 
-  let intRecordRoute = gRoute (Proxy :: Proxy IntRecord)
-  log (show (serialize intRecordRoute (Just (IntRecord { id : 8 }))))
+  let route = gRoute (Proxy :: Proxy SimplePositionalValue)
+      obj = SimplePositionalValue 8
+  log (show (serialize route obj))
+
+  let route = gRoute (Proxy :: Proxy SimplePositionalValue)
+      obj = SimplePositionalValue 8
+  log (show (serialize route obj))
+
+  -- let intRecordRoute = gRoute (Proxy :: Proxy IntRecord)
+  -- log (show (serialize intRecordRoute (Just (IntRecord { id : 8 }))))

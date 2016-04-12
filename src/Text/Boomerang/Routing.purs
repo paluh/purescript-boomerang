@@ -1,11 +1,12 @@
 module Text.Boomerang.Routing where
 
+import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
 import Debug.Trace (trace)
-
 import Data.Array as Array
 import Data.Array.Unsafe (head)
 import Data.Foldable (foldl, foldr)
-import Data.Generic (class Generic, DataConstructor, fromSpine, GenericSignature(..), GenericSpine(..), toSignature, toSpine)
+import Data.Generic (class Generic, DataConstructor, fromSpine, GenericSignature(..),
+                     GenericSpine(..), toSignature, toSpine)
 import Data.List (fromFoldable, List)
 import Data.Maybe (Maybe(..))
 import Prelude (const, id, show, unit, Unit, (<<<), (<>), (==), (<$>), ($))
@@ -52,7 +53,7 @@ signatureToSpineBoomerang SigInt =
 signatureToSpineBoomerang (SigRecord props) =
   toRecord <<< foldl step nil props
  where
-  step r e = cons <<< (toProp e.recLabel <<< signatureToSpineBoomerang (e.recValue unit)) </> r
+  step r e = cons </> (toProp e.recLabel <<< signatureToSpineBoomerang (e.recValue unit)) <<< r
 
   toProp :: forall s. String -> StringBoomerang (HCons GenericSpine s) (HCons GenericRecProp s)
   toProp l =
@@ -65,14 +66,12 @@ signatureToSpineBoomerang (SigRecord props) =
           if p.recLabel == l
             then Just (p.recValue unit)
             else Nothing)
-
   toRecord :: forall s. StringBoomerang (HCons (List GenericRecProp) s) (HCons GenericSpine s)
   toRecord =
     maph SRecord recSer <<< arrayFromList
    where
     recSer (SRecord props) = Just props
     recSer _               = Nothing
-
 signatureToSpineBoomerang s@(SigProd n cs) =
   -- XXX: this is coorectly only for single constructor
   let constructor = (head cs) in
@@ -88,9 +87,12 @@ signatureToSpineBoomerang s@(SigProd n cs) =
     lazy :: forall a t. StringBoomerang (HCons a t) (HCons (Unit -> a) t)
     lazy = maph const (Just <<< (_ $ unit))
 
-    step r e = cons <<< lazy <<< signatureToSpineBoomerang (e unit) </> r
+    step r e = cons </> lazy <<< signatureToSpineBoomerang (e unit) <<< r
 
-gRoute :: forall a r. (Generic a) => Proxy a -> StringBoomerang r (HCons (Maybe a) r)
+gRoute :: forall a r. (Generic a) => Proxy a -> StringBoomerang r (HCons a r)
 gRoute p =
-  maph fromSpine (toSpine <$> _) <<< (signatureToSpineBoomerang (toSignature p))
+  maph prs (\v -> Just (Just v)) <<< maph fromSpine (toSpine <$> _) <<< (signatureToSpineBoomerang (toSignature p))
+ where
+  prs (Just s) = s
+  prs Nothing = unsafeThrow ("Incorrect spine generated for signature: " <> show (toSignature p))
 

@@ -71,6 +71,20 @@ data BooleanIntRoute = BooleanIntRoute
   }
 derive instance genericBooleanIntRoute :: Generic BooleanIntRoute
 
+data SimplePositionalValue = SimplePositionalValue Int
+derive instance genericSimplePositionalValue :: Generic SimplePositionalValue
+instance eqSimplePositionalValue :: Eq SimplePositionalValue where
+  eq = gEq
+instance showSimplePositionalValue :: Show SimplePositionalValue where
+  show = gShow
+
+data SimplePositionalValues = SimplePositionalValues Int Boolean Int
+derive instance genericSimplePositionalValues :: Generic SimplePositionalValues
+instance eqSimplePositionalValues :: Eq SimplePositionalValues where
+  eq = gEq
+instance showSimplePositionalValues :: Show SimplePositionalValues where
+  show = gShow
+
 main :: forall e. Eff ( timer :: TIMER
                       , avar :: AVAR
                       , testOutput :: TESTOUTPUT | e
@@ -107,8 +121,25 @@ main = runTest do
       (parse profileR "profile/20/compact/" == Just profile)
     equal (Just "profile/20/compact/") (serialize profileR profile)
 
-  test "gBoomerang handles BooleanIntRoute" do
-    let b = BooleanIntRoute { extended : true, id : 10 }
-        bRoute = gRoute (Proxy :: Proxy BooleanIntRoute)
-    equal (Just "/on/10") (serialize bRoute (Just b))
+  test "gRoute handles constructor with single, primitive value" do
+    let route = gRoute (Proxy :: Proxy SimplePositionalValue)
+        obj = SimplePositionalValue 8
+    equal (Just "/8") (serialize route obj)
+    equal (Just obj) (parse route "/8")
+
+  test "gRoute handles construtor with multiple, primitive values" do
+    let route = gRoute (Proxy :: Proxy SimplePositionalValues)
+        obj = SimplePositionalValues 8 true 9
+    equal (Just "/8/on/9") (serialize route obj)
+    equal (Just obj) (parse route "/8/on/9")
+
+  -- test "gRoute handles construtor with simple positional args" do
+  --   let route = gRoute (Proxy :: Proxy SimplePositionalValues)
+  --       obj = SimplePositionalValues 8 true
+  --   equal (Just "/on/10") (serialize route (Just obj))
+
+  -- test "gBoomerang handles BooleanIntRoute" do
+  --   let b = BooleanIntRoute { extended : true, id : 10 }
+  --       bRoute = gRoute (Proxy :: Proxy BooleanIntRoute)
+  --   equal (Just "/on/10") (serialize bRoute (Just b))
 
