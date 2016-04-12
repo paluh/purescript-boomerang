@@ -6,7 +6,7 @@ import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.String (fromChar, toCharArray)
-import Prelude (compose, const, id, show, Unit, (<$>), (<>), (<<<), (==))
+import Prelude (compose, const, id, not, show, (<$>), (<>), (<<<), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pure)
 import Text.Boomerang.HStack (class HList, hCons, HCons(..), hMap)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
@@ -57,6 +57,18 @@ noneOf a =
       then Just (Tuple (fromChar c <>  _) t)
       else Nothing
 
+noneOf :: forall r. Array Char -> StringBoomerang r (HCons Char r)
+noneOf a =
+  Boomerang {
+      prs : (hCons <$> Text.Parsing.Parser.String.noneOf a)
+    , ser : Serializer ser
+  }
+ where
+  ser (HCons c t) =
+    if not (c `elem` a)
+      then Just (Tuple (fromChar c <>  _) t)
+      else Nothing
+
 fromCharList :: forall f. Foldable f => f Char -> String
 fromCharList = foldMap fromChar
 
@@ -80,7 +92,7 @@ digits :: forall r. StringBoomerang r (HCons String r)
 digits = many1Of "0123456789"
 
 -- int :: forall r. Unit -> StringBoomerang r (HCons Int r)
-int :: forall r. (HList r) => Boomerang String r (HCons Int r)
+int :: forall r. Boomerang String r (HCons Int r)
 int =
   maph intPrs intSer `compose` digits
  where

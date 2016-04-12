@@ -7,16 +7,19 @@ import Data.Generic (class Generic, gEq, gShow)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (bind, class Eq, class Show, compose, return, Unit, unit, (<>), (==))
+import Prelude (bind, class Eq, class Show,
+                return, Unit, (<>), (==), (<<<))
 import Test.Unit (test, runTest, TIMER)
 import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Assert (assert, equal)
-import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hHead, HNil, hNil, hSingleton, hTop2, HTop2)
+import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..),
+                              hHead, HNil, hNil, hSingleton, hTop2, HTop2)
 import Text.Boomerang.Combinators (cons, nil, opt, pure)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer)
-import Text.Boomerang.Routing ((</>))
+import Text.Boomerang.Routing ((</>), gRoute)
 import Text.Boomerang.String (int, lit, string, StringBoomerang)
 import Text.Parsing.Parser (runParser)
+import Type.Proxy (Proxy(..))
 
 parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
 parse (Boomerang b) s = do
@@ -31,10 +34,9 @@ serialize (Boomerang b) s = do
 data ProfileViewMode = Compact | Extended
 derive instance genericProfileViewMode :: Generic ProfileViewMode
 
-data Profile =
-  Profile {
-      id :: Int
-    , view :: ProfileViewMode
+data Profile = Profile
+  { id :: Int
+  , view :: ProfileViewMode
   }
 derive instance genericProfile :: Generic Profile
 
@@ -46,7 +48,7 @@ instance eqProfile :: Eq Profile where
 
 profileR :: forall r. (HList r) => StringBoomerang r (HCons Profile r)
 profileR =
-  lit "profile" </> pR `compose` int </> pvR `compose` opt (lit "/")
+  pR <<< lit "profile" </> int </> pvR <<< opt (lit "/")
  where
   -- Profile route
   pR :: forall t. StringBoomerang (HTop2 Int ProfileViewMode t) (HCons Profile t)
@@ -56,12 +58,18 @@ profileR =
   -- ProfileView route
   pvR :: forall t. StringBoomerang t (HCons ProfileViewMode t)
   pvR =
-    vb `compose` (string "compact" <> string "extended")
+    vb <<< (string "compact" <> string "extended")
    where
     vb = pure (hArg (hCons) (\s -> if s == "compact" then Compact else Extended))
               ser
     ser (HCons Compact t) = Just (hCons "compact" t)
     ser (HCons Extended t) = Just (hCons "extended" t)
+
+data BooleanIntRoute = BooleanIntRoute
+  { extended :: Boolean
+  , id :: Int
+  }
+derive instance genericBooleanIntRoute :: Generic BooleanIntRoute
 
 main :: forall e. Eff ( timer :: TIMER
                       , avar :: AVAR
@@ -75,7 +83,7 @@ main = runTest do
     equal Nothing (parse foo "bar")
 
   test "Basic composition with list aggregation" do
-    let fooBar = (cons `compose` string "foo" `compose` cons `compose` string "bar" `compose` nil)
+    let fooBar = (cons <<< string "foo" <<< cons <<< string "bar" <<< nil)
     test "parsing" do
       equal (Just ("foo":"bar":Nil)) (parse fooBar "foobar")
       equal Nothing (parse fooBar "barfoo")
@@ -98,3 +106,9 @@ main = runTest do
     assert "profile route parsing without trailing slash"
       (parse profileR "profile/20/compact/" == Just profile)
     equal (Just "profile/20/compact/") (serialize profileR profile)
+
+  test "gBoomerang handles BooleanIntRoute" do
+    let b = BooleanIntRoute { extended : true, id : 10 }
+        bRoute = gRoute (Proxy :: Proxy BooleanIntRoute)
+    equal (Just "/on/10") (serialize bRoute (Just b))
+

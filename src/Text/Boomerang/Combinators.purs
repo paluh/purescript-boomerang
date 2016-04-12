@@ -1,10 +1,12 @@
 module Text.Boomerang.Combinators where
 
 import Control.Lazy (defer)
-import Data.List (List(..), (:))
+import Data.Array
+import Data.Foldable (foldr)
+import Data.List (fromFoldable, List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Prelude (compose, flip, id, return, (<$>), (<>))
+import Prelude (compose, flip, id, return, (<$>), (<>), (<<<))
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
 import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), HTop2)
@@ -54,6 +56,17 @@ cons =
 
 list :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> Boomerang tok t (HCons (List a) t)
 list b = (cons `compose` b `compose` defer (\_ -> list b)) <> nil
+
+array :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> Boomerang tok t (HCons (Array a) t)
+array b =
+  arrayFromList <<< list b
+
+arrayFromList :: forall t a tok. Boomerang tok (HCons (List a) t) (HCons (Array a) t)
+arrayFromList =
+  maph arrayFromFoldable (Just <<< fromFoldable)
+ where
+  -- very ineficient - will be replaced with next purescript-array release
+  arrayFromFoldable = foldr Data.Array.cons []
 
 opt :: forall tok t. Boomerang tok t t -> Boomerang tok t t
 opt b = b <> id
