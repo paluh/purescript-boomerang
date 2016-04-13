@@ -10,7 +10,7 @@ import Test.Unit (test, runTest, TIMER)
 import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Assert (assert, equal)
 import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hTop2, HTop2)
-import Text.Boomerang.Combinators (cons, nil, opt, pure)
+import Text.Boomerang.Combinators (cons, listSep, nil, opt, pure)
 import Text.Boomerang.Routing ((</>))
 import Text.Boomerang.String (int, lit, parse, serialize, string, StringBoomerang)
 
@@ -54,7 +54,7 @@ main :: forall e. Eff ( timer :: TIMER
                       , testOutput :: TESTOUTPUT | e
                       ) Unit
 main = runTest do
-  test "String routes parsing" do
+  test "String parsing" do
     let foo = (string "foo" :: forall r. StringBoomerang r (HCons String r))
         bar = (string "bar" :: forall r. StringBoomerang r (HCons String r))
     equal (Just "foo") (parse foo "foo")
@@ -68,6 +68,21 @@ main = runTest do
     test "serialization" do
       equal (Just "foobar") (serialize fooBar ("foo" : "bar" : Nil))
       equal Nothing (serialize fooBar ("foo" : "bar" : "baz" : Nil))
+
+  test "listSep combinator for non empty list" do
+    let intList = (listSep int (lit ","))
+    equal (Just (1:2:3:4:5:Nil)) (parse intList "1,2,3,4,5")
+    equal (Just "1,2,3,4,5") (serialize intList (1:2:3:4:5:Nil))
+
+  test "listSep combinator for singleton list" do
+    let intList = (listSep int (lit ","))
+    equal (Just (1:Nil)) (parse intList "1")
+    equal (Just "1") (serialize intList (1:Nil))
+
+  test "listSep combinator for empty list" do
+    let intList = (listSep int (lit ","))
+    equal (Just (Nil)) (parse intList "")
+    equal (Just "") (serialize intList (Nil))
 
   test "Basic alternatives" do
     let fooOrBar = string "foo" <> string "bar"
