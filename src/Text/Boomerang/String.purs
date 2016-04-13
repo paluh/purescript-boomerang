@@ -10,7 +10,7 @@ import Data.String (fromChar, toCharArray)
 import Prelude (bind, compose, const, id, not, return,
                 show, (<$>), (<>), (<<<), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pure)
-import Text.Boomerang.HStack (class HList, hCons, HCons(..), hHead, hMap,
+import Text.Boomerang.HStack (hCons, HCons(..), hHead, hMap,
                               hNil, HNil, hSingleton)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer, Serializer(..))
 import Text.Parsing.Parser.String
@@ -85,7 +85,7 @@ digits :: forall r. StringBoomerang r (HCons String r)
 digits = many1Of "0123456789"
 
 -- int :: forall r. Unit -> StringBoomerang r (HCons Int r)
-int :: forall r. (HList r) => Boomerang String r (HCons Int r)
+int :: forall r. Boomerang String r (HCons Int r)
 int =
   maph intPrs intSer `compose` digits
  where
