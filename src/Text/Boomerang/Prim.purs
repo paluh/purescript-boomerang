@@ -6,6 +6,7 @@ import Control.Monad.Eff.Console
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
+import Text.Parsing.Parser.Combinators (try)
 import Prelude (bind, compose, class Category, class Semigroupoid,
                 class Semigroup, id, return, unit, (<<<))
 
@@ -45,8 +46,8 @@ data Boomerang tok a b =
 instance semigroupoidBoomerang :: Semigroupoid (Boomerang tok) where
   compose (Boomerang b1) (Boomerang b2) =
     Boomerang {
-        prs : composePrs (b1.prs) (b2.prs)
-      , ser : compose (b2.ser) (b1.ser)
+        prs : composePrs b1.prs b2.prs
+      , ser : compose b2.ser b1.ser
     }
 
 instance categoryBoomerang :: Category (Boomerang tok) where
@@ -58,7 +59,7 @@ instance categoryBoomerang :: Category (Boomerang tok) where
 instance semigroupBoomerang :: Semigroup (Boomerang tok a b) where
   append (Boomerang b1) (Boomerang b2) =
     Boomerang {
-        prs : (b1.prs <|> b2.prs)
+        prs : (try b1.prs) <|> b2.prs
       , ser : Serializer (\b -> (runSerializer b1.ser b) <|> (runSerializer b2.ser b))
     }
 

@@ -5,7 +5,7 @@ import Control.Monad.Eff (Eff)
 import Data.Generic (class Generic, gEq, gShow)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
-import Prelude (bind, class Eq, class Show, compose, Unit, (<>), (==))
+import Prelude (bind, class Eq, class Show, compose, Unit, (<>), (==), (<<<))
 import Test.Unit (test, runTest, TIMER)
 import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Assert (assert, equal)
@@ -77,6 +77,39 @@ main = runTest do
     test "serialization" do
       equal (Just "foo") (serialize fooOrBar "foo")
       equal (Just "bar") (serialize fooOrBar "bar")
+
+  test "Alternatives with prefixes" do
+    let fooOrBar =
+      (lit "foo-prefix" <<< string "foo") <>
+      (lit "bar-prefix" <<< string "bar")
+    test "parsing" do
+      equal (Just "bar") (parse fooOrBar "bar-prefixbar")
+      equal (Just "foo") (parse fooOrBar "foo-prefixfoo")
+    test "serialization" do
+      equal (Just "foo-prefixfoo") (serialize fooOrBar "foo")
+      equal (Just "bar-prefixbar") (serialize fooOrBar "bar")
+
+  test "Multiple choices with string prefixes" do
+    let fooOrBar =
+      string "/" <<< lit "foo-prefix" <>
+      string "/" <<< lit "bar-prefix"
+    test "parsing" do
+      equal (Just "/") (parse fooOrBar "/foo-prefix")
+      equal (Just "/") (parse fooOrBar "/bar-prefix")
+
+  test "Multiple choices with literal prefixes" do
+    let fooOrBarOrBaz =
+      lit "/" <<< lit "foo-prefix" <<< string "foo" <>
+      lit "/" <<< lit "bar-prefix" <<< string "bar" <>
+      lit "/" <<< lit "baz-prefix" <<< string "baz"
+    test "parsing" do
+      equal (Just "bar") (parse fooOrBarOrBaz "/bar-prefixbar")
+      equal (Just "foo") (parse fooOrBarOrBaz "/foo-prefixfoo")
+      equal (Just "baz") (parse fooOrBarOrBaz "/baz-prefixbaz")
+    test "serialization" do
+      equal (Just "/foo-prefixfoo") (serialize fooOrBarOrBaz "foo")
+      equal (Just "/bar-prefixbar") (serialize fooOrBarOrBaz "bar")
+      equal (Just "/baz-prefixbaz") (serialize fooOrBarOrBaz "baz")
 
   test "Profile routes" do
     let profile = Profile {id: 20, view: Compact}
