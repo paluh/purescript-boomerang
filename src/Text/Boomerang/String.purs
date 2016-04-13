@@ -1,18 +1,23 @@
 module Text.Boomerang.String where
 
+import Control.Error.Util (hush)
 import Data.Foldable (class Foldable, elem, foldMap)
 import Data.Int (fromString)
 import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.String (fromChar, toCharArray)
-import Prelude (compose, const, id, show, Unit, (<$>), (<>), (<<<), (==))
+import Prelude (bind, compose, const, id, not, return,
+                show, (<$>), (<>), (<<<), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pure)
-import Text.Boomerang.HStack (class HList, hCons, HCons(..), hMap)
-import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
+import Text.Boomerang.HStack (class HList, hCons, HCons(..), hHead, hMap,
+                              hNil, HNil, hSingleton)
+import Text.Boomerang.Prim (Boomerang(..), runSerializer, Serializer(..))
 import Text.Parsing.Parser.String
+import Text.Parsing.Parser (runParser)
 
 type StringBoomerang = Boomerang String
+
 
 lit :: forall r. String -> StringBoomerang r r
 lit s =
@@ -89,3 +94,13 @@ int =
 
   intSer :: Int -> Maybe String
   intSer i = Just (show i)
+
+parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
+parse (Boomerang b) s = do
+  f <- hush (runParser s b.prs)
+  return (hHead (f hNil))
+
+serialize :: forall a. StringBoomerang HNil (HCons a HNil) -> a -> Maybe String
+serialize (Boomerang b) s = do
+  (Tuple f _) <- runSerializer b.ser (hSingleton s)
+  return (f "")

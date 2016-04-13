@@ -2,31 +2,17 @@ module Test.Main where
 
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
-import Control.Error.Util (hush)
 import Data.Generic (class Generic, gEq, gShow)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..))
-import Prelude (bind, class Eq, class Show, compose, return, Unit, unit, (<>), (==))
+import Prelude (bind, class Eq, class Show, compose, Unit, (<>), (==))
 import Test.Unit (test, runTest, TIMER)
 import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Assert (assert, equal)
-import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hHead, HNil, hNil, hSingleton, hTop2, HTop2)
+import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hTop2, HTop2)
 import Text.Boomerang.Combinators (cons, nil, opt, pure)
-import Text.Boomerang.Prim (Boomerang(..), runSerializer)
 import Text.Boomerang.Routing ((</>))
-import Text.Boomerang.String (int, lit, string, StringBoomerang)
-import Text.Parsing.Parser (runParser)
-
-parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
-parse (Boomerang b) s = do
-  f <- hush (runParser s b.prs)
-  return (hHead (f hNil))
-
-serialize :: forall a. StringBoomerang HNil (HCons a HNil) -> a -> Maybe String
-serialize (Boomerang b) s = do
-  (Tuple f _) <- runSerializer b.ser (hSingleton s)
-  return (f "")
+import Text.Boomerang.String (int, lit, parse, serialize, string, StringBoomerang)
 
 data ProfileViewMode = Compact | Extended
 derive instance genericProfileViewMode :: Generic ProfileViewMode
