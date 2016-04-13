@@ -45,6 +45,18 @@ oneOf a =
       then Just (Tuple (fromChar c <>  _) t)
       else Nothing
 
+noneOf :: forall r. Array Char -> StringBoomerang r (HCons Char r)
+noneOf a =
+  Boomerang {
+      prs : (hCons <$> Text.Parsing.Parser.String.noneOf a)
+    , ser : Serializer ser
+  }
+ where
+  ser (HCons c t) =
+    if not (c `elem` a)
+      then Just (Tuple (fromChar c <>  _) t)
+      else Nothing
+
 fromCharList :: forall f. Foldable f => f Char -> String
 fromCharList = foldMap fromChar
 
