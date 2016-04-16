@@ -14,7 +14,7 @@ Caution: I'm not mathematician (I'm trying to be practical programmer) and my de
 
 ### Parsers / Serializers
 
-Let's try to analyze main type from this library which is called `Boomerang`. I'm going to try to construct this type bottom up. `Boomerang` consist of two isomorphic functions: serializer and parser.
+Let's try to analyze main type from this library which is called `Boomerang`. I'm going to try to construct this type bottom up. `Boomerang` consists of two isomorphic functions: serializer and parser.
 
 Let's start with trivial parser and serializer types:
 
@@ -53,7 +53,9 @@ Let's try to add possibility to leave some input in case of serializer (imagine 
 
         `(a, tok) -> (tok, b)`
 
-We can curry both functions:
+It is strange but we have (nearly) the same type for serializer and parser... the main difference lays behind this types. As we will finally see parser uses `tok` to generate function which converts one value (of type `b`) into another (of type `a`). Additionally it returns some remaining tokens stream (of type `tok`). On the other hand serializer uses input value (of type `a`) to generate function which "appends" to token stream serialized version of input value. Additionally it returns remaining, unserialized value (of type `b`). I hope that it all will be clear in a moment.
+
+Let's continue our deriviation. We can curry both functions:
 
     * parser:
 
@@ -73,14 +75,14 @@ Let's add parenthesis for clarity:
 
         `a -> (tok -> (tok, b))`
 
-Now, if we assume that our parser doesn't rely only on input token when doing parsing step then we can move `b` argument to a result of parsing (resulting token will be the same for all `b`'s):
+Now, if we assume that our parser does rely only on input token when doing parsing step then we can move `b` argument to a result of parsing (resulting token will be the same for all `b`'s):
 
     * parser:
 
         `tok -> (b -> a, tok)`
 
 
-Similarly we can assume that in serializer function, resulting `b` value doesn't depend on initial token and extract it from all results:
+Similarly we can assume that in serializer function, remainig `b` value doesn't depend on initial token and extract it from all results:
 
     * serializer:
 
@@ -103,7 +105,7 @@ Let's try to compose parsers (using String as token and avoiding `Either` type f
                                    (a2b, s'') = pa2b s'
                                in (b2c <<< a2b, s''))
 
-There is one design decision worth noting here - these composition 
+There is one design decision worth noting here - these composition...
 
 
 ### Different parser derivation
@@ -128,7 +130,7 @@ Above type is basic parser type for monadic parsers and it's monad/applicative/f
 
     `b -> Parser tok a`
 
-If we assume that type `Parser tok` has monad instance we have category instance for `free` for this type (we have to only use `purescript-arrows` and `Kleisly (Parser tok)` is our category).
+If we assume that type `Parser tok` has monad instance we have category instance for "free" for this type (we have to only use `purescript-arrows` and `Kleisly (Parser tok)` is our category).
 
 
 ### Serializers composition
