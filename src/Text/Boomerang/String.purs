@@ -65,6 +65,7 @@ noneOf a =
 fromCharList :: forall f. Foldable f => f Char -> String
 fromCharList = foldMap fromChar
 
+-- XXX: refactor this functions
 manyOf :: forall r. String -> StringBoomerang r (HCons String r)
 manyOf a =
   pure prs ser `compose` list (oneOf a')
@@ -76,6 +77,22 @@ manyOf a =
 many1Of :: forall r. String -> StringBoomerang r (HCons String r)
 many1Of a =
   pure prs ser `compose` cons `compose` oneOf a' `compose` list (oneOf a')
+ where
+  a' = toCharArray a
+  prs = hMap fromCharList
+  ser h = Just (hMap (fromFoldable <<< toCharArray) h)
+
+manyNoneOf :: forall r. String -> StringBoomerang r (HCons String r)
+manyNoneOf a =
+  pure prs ser <<< list (noneOf a')
+ where
+  a' = toCharArray a
+  prs = hMap fromCharList
+  ser h = Just (hMap (fromFoldable <<< toCharArray) h)
+
+many1NoneOf :: forall r. String -> StringBoomerang r (HCons String r)
+many1NoneOf a =
+  pure prs ser `compose` cons `compose` noneOf a' `compose` list (noneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
