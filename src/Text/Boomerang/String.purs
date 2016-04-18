@@ -114,7 +114,11 @@ int =
 
 parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
 parse (Boomerang b) s = do
-  f <- hush (runParser s b.prs)
+  f <- hush (runParser s (do
+    r <- b.prs
+    -- we have to consume whole input
+    eof
+    return r))
   return (hHead (f hNil))
 
 serialize :: forall a. StringBoomerang HNil (HCons a HNil) -> a -> Maybe String

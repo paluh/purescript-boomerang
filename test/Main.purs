@@ -11,11 +11,15 @@ import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Assert (assert, equal)
 import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hTop2, HTop2)
 import Text.Boomerang.Combinators (cons, listSep, nil, opt, pure)
-import Text.Boomerang.Routing ((</>))
 import Text.Boomerang.String (int, lit, parse, serialize, string, StringBoomerang)
+
+join :: forall a b c. StringBoomerang b c -> StringBoomerang a b -> StringBoomerang a c
+join b1 b2 = b1 `compose` lit "/" `compose` b2
 
 data ProfileViewMode = Compact | Extended
 derive instance genericProfileViewMode :: Generic ProfileViewMode
+
+infixl 6 join as </>
 
 data Profile =
   Profile {
@@ -59,6 +63,10 @@ main = runTest do
         bar = (string "bar" :: forall r. StringBoomerang r (HCons String r))
     equal (Just "foo") (parse foo "foo")
     equal Nothing (parse foo "bar")
+
+  test "`parse` function consume whole input" do
+    let foo = (string "foo" :: forall r. StringBoomerang r (HCons String r))
+    equal Nothing (parse foo "foo-and-something-more")
 
   test "Basic composition with list aggregation" do
     let fooBar = (cons `compose` string "foo" `compose` cons `compose` string "bar" `compose` nil)
