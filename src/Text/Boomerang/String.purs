@@ -1,19 +1,21 @@
 module Text.Boomerang.String where
 
 import Control.Error.Util (hush)
+import Data.Array as Data.Array
 import Data.Foldable (class Foldable, elem, foldMap)
 import Data.Int (fromString)
 import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Tuple (Tuple(..))
-import Data.String (fromChar, toCharArray)
-import Prelude (bind, compose, const, id, not, return,
+import Data.String (fromCharArray, toCharArray)
+import Prelude (bind, compose, const, id, not, pure,
                 show, (<$>), (<>), (<<<), (==))
-import Text.Boomerang.Combinators (cons, list, maph, pure)
+import Text.Boomerang.Combinators (cons, list, maph, pureBmg)
 import Text.Boomerang.HStack (hCons, HCons(..), hHead, hMap,
                               hNil, HNil, hSingleton)
 import Text.Boomerang.Prim (Boomerang(..), runSerializer, Serializer(..))
-import Text.Parsing.Parser.String
+import Text.Parsing.Parser.String as Text.Parsing.Parser.String
+import Text.Parsing.Parser.String (eof)
 import Text.Parsing.Parser (runParser)
 
 type StringBoomerang = Boomerang String
@@ -47,7 +49,7 @@ oneOf a =
  where
   ser (HCons c t) =
     if c `elem` a
-      then Just (Tuple (fromChar c <>  _) t)
+      then Just (Tuple (fromCharArray [c] <>  _) t)
       else Nothing
 
 noneOf :: forall r. Array Char -> StringBoomerang r (HCons Char r)
@@ -59,16 +61,16 @@ noneOf a =
  where
   ser (HCons c t) =
     if not (c `elem` a)
-      then Just (Tuple (fromChar c <>  _) t)
+      then Just (Tuple (fromCharArray [c] <>  _) t)
       else Nothing
 
 fromCharList :: forall f. Foldable f => f Char -> String
-fromCharList = foldMap fromChar
+fromCharList = fromCharArray <<< Data.Array.fromFoldable
 
 -- XXX: refactor this functions
 manyOf :: forall r. String -> StringBoomerang r (HCons String r)
 manyOf a =
-  pure prs ser `compose` list (oneOf a')
+  pureBmg prs ser `compose` list (oneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -76,7 +78,7 @@ manyOf a =
 
 many1Of :: forall r. String -> StringBoomerang r (HCons String r)
 many1Of a =
-  pure prs ser `compose` cons `compose` oneOf a' `compose` list (oneOf a')
+  pureBmg prs ser `compose` cons `compose` oneOf a' `compose` list (oneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -84,7 +86,7 @@ many1Of a =
 
 manyNoneOf :: forall r. String -> StringBoomerang r (HCons String r)
 manyNoneOf a =
-  pure prs ser <<< list (noneOf a')
+  pureBmg prs ser <<< list (noneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -92,7 +94,7 @@ manyNoneOf a =
 
 many1NoneOf :: forall r. String -> StringBoomerang r (HCons String r)
 many1NoneOf a =
-  pure prs ser `compose` cons `compose` noneOf a' `compose` list (noneOf a')
+  pureBmg prs ser `compose` cons `compose` noneOf a' `compose` list (noneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -118,10 +120,10 @@ parse (Boomerang b) s = do
     r <- b.prs
     -- we have to consume whole input
     eof
-    return r))
-  return (hHead (f hNil))
+    pure r))
+  pure (hHead (f hNil))
 
 serialize :: forall a. StringBoomerang HNil (HCons a HNil) -> a -> Maybe String
 serialize (Boomerang b) s = do
   (Tuple f _) <- runSerializer b.ser (hSingleton s)
-  return (f "")
+  pure (f "")

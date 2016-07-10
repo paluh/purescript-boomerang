@@ -8,7 +8,7 @@ import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
 import Text.Parsing.Parser.Combinators (try)
 import Prelude (bind, compose, class Category, class Semigroupoid,
-                class Semigroup, id, return, unit, (<<<))
+                class Semigroup, id, pure, unit, (<<<))
 
 newtype Serializer tok a b = Serializer (a -> Maybe (Tuple (tok -> tok) b))
 
@@ -22,7 +22,7 @@ instance semigroupoidSerializer :: Semigroupoid (Serializer tok) where
   compose (Serializer ser1) (Serializer ser2) = Serializer (\c -> do
     (Tuple t2 b) <- ser2 c
     (Tuple t1 a) <- ser1 b
-    return (Tuple (t2 <<< t1) a))
+    pure (Tuple (t2 <<< t1) a))
 
 instance categorySerializer :: Category (Serializer tok) where
   id = Serializer (Just <<< Tuple id)
@@ -33,7 +33,7 @@ composePrs :: forall tok a b c. Parser tok (b -> c) ->
 composePrs prs1 prs2 = do
   b2c <- prs1
   a2b <- prs2
-  return (b2c <<< a2b)
+  pure (b2c <<< a2b)
 
 type BoomerangRecord tok a b =
   { prs :: Parser tok (a -> b)
@@ -52,7 +52,7 @@ instance semigroupoidBoomerang :: Semigroupoid (Boomerang tok) where
 
 instance categoryBoomerang :: Category (Boomerang tok) where
   id = Boomerang {
-      prs : return id
+      prs : pure id
     , ser : id
   }
 

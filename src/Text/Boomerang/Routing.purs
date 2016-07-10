@@ -5,7 +5,7 @@ import Text.Boomerang.HStack (hNil, HNil)
 import Text.Boomerang.String (lit, StringBoomerang)
 
 -- XXX: This module will be dropped soon
---      check purescript-routing-bob for
+--      check pureBmgscript-routing-bob for
 --      example of routing solution
 --      based on this library
 
