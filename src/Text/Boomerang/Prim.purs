@@ -10,6 +10,7 @@ import Text.Parsing.Parser.Combinators (try)
 
 -- m is a "monad" accumulating serialization results:
 -- * if you want to generate all posible serializations you can use [],
+-- * if you want single result use Maybe and your serializer can fail,
 -- * if your serialier never failes and you want just one result use Identity
 newtype Serializer m tok a b = Serializer (a -> m (Tuple (tok -> tok) b))
 
