@@ -34,6 +34,8 @@ We can transform this types a bit (using these transformations: `(a, b) -> c` ~ 
 
         `tok -> b -> (a, tok)`
 
+        `tok -> (b -> (a, tok))`
+
         `tok -> (b -> a, tok)`
 
 
@@ -43,16 +45,17 @@ We can transform this types a bit (using these transformations: `(a, b) -> c` ~ 
 
         `a -> tok -> (tok, b)`
 
+        `a -> (tok -> (tok, b))`
+
         `a -> (tok -> tok, b)`
 
 
-Above types (plus error handling through `Either` and `Maybe`) are base building blocks for this library. The one important element which is missing is composition of this base combinators...
-
+Above types (plus error handling through `Either` and `Maybe`) are base building blocks for this library. The one important element which is missing is composition...
 
 
 ### Parsers composition
 
-Let's try to compose parsers (using String as token and avoiding `Either` type for simplification):
+Let's try to compose parsers (using String as token and avoiding error hadnling `Either`):
 
     data BoomerangParser a b = BoomerangParser (String -> ((a -> b), String))
 
@@ -63,6 +66,5 @@ Let's try to compose parsers (using String as token and avoiding `Either` type f
                                    (a2b, s'') = pa2b s'
                                in (b2c <<< a2b, s''))
 
-There is one design decision worth noting here - these composition...
 
 
