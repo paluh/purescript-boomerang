@@ -66,5 +66,6 @@ Let's try to compose parsers (using String as token and avoiding error hadnling 
                                    (a2b, s'') = pa2b s'
                                in (b2c <<< a2b, s''))
 
+### Serializers composition
 
-
+More docs comming soon...
