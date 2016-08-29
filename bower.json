@@ -30,6 +30,7 @@
     "purescript-monoid": "1.0.0",
     "purescript-parsing": "1.0.0",
     "purescript-prelude": "1.0.1",
+    "purescript-profunctor": "^1.0.0",
     "purescript-transformers": "1.0.0",
     "purescript-tuples": "1.0.0"
   },

@@ -3,11 +3,12 @@ module Text.Boomerang.Combinators where
 import Control.Lazy (defer)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
+import Data.Profunctor.Strong (second)
 import Data.Tuple (Tuple(..))
-import Prelude (flip, id, pure, (<$>), (<>), (<<<))
+import Prelude
+import Text.Boomerang.HStack (hArg, hCons, hMap, type (:-), (:-))
+import Text.Boomerang.Prim (runSerializer, Boomerang(..), Serializer(..))
 import Text.Parsing.Parser (Parser)
-import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
-import Text.Boomerang.HStack (hArg, hCons, hMap, type (:-), (:-))
 
 pureBmgSer :: forall a b tok. (a -> Maybe b) -> Serializer tok a b
 pureBmgSer s = Serializer ((Tuple id <$> _) <$> s)
@@ -36,6 +37,18 @@ maph p s =
    where
     hCons' :: forall a s. Maybe a -> s -> Maybe (a :- s)
     hCons' mh t  = flip hCons t <$> mh
+
+duck1 :: forall a h t tok. Boomerang tok t (a :- t) -> Boomerang tok (h :- t) (a :- h :- t)
+duck1 (Boomerang b) =
+  Boomerang
+    { prs: prs
+    , ser: ser
+    }
+ where
+  prs =
+    (\t2at -> \(h :- t) -> case t2at t of (a :- t') -> a :- h :- t') <$> b.prs
+  ser =
+    Serializer (\(a :- h :- t) -> second (h :- _) <$> runSerializer b.ser (a :- t))
 
 nil :: forall t a tok. Boomerang tok t (List a :- t)
 nil =

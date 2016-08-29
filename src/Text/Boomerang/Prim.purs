@@ -2,7 +2,6 @@ module Text.Boomerang.Prim where
 
 import Control.Alt ((<|>))
 import Control.Lazy (class Lazy, defer)
-import Control.Monad.Eff.Console
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Text.Parsing.Parser (Parser)
