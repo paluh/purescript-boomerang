@@ -2,13 +2,13 @@ module Text.Boomerang.String where
 
 import Control.Error.Util (hush)
 import Data.Array as Data.Array
-import Data.Foldable (class Foldable, elem, foldMap)
+import Data.Foldable (class Foldable, elem)
 import Data.Int (fromString)
 import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.String (fromCharArray, toCharArray)
-import Prelude (bind, compose, const, id, not, pure,
+import Prelude (bind, const, id, not, pure,
                 show, (<$>), (<>), (<<<), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pureBmg)
 import Text.Boomerang.HStack (hCons, hHead, hMap, hNil, HNil, hSingleton, (:-), type (:-))
@@ -69,7 +69,7 @@ fromCharList = fromCharArray <<< Data.Array.fromFoldable
 -- XXX: refactor this functions
 manyOf :: forall r. String -> StringBoomerang r (String :- r)
 manyOf a =
-  pureBmg prs ser `compose` list (oneOf a')
+  pureBmg prs ser <<< list (oneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -77,7 +77,7 @@ manyOf a =
 
 many1Of :: forall r. String -> StringBoomerang r (String :- r)
 many1Of a =
-  pureBmg prs ser `compose` cons `compose` oneOf a' `compose` list (oneOf a')
+  pureBmg prs ser <<< cons <<< oneOf a' <<< list (oneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -93,7 +93,7 @@ manyNoneOf a =
 
 many1NoneOf :: forall r. String -> StringBoomerang r (String :- r)
 many1NoneOf a =
-  pureBmg prs ser `compose` cons `compose` noneOf a' `compose` list (noneOf a')
+  pureBmg prs ser <<< cons <<< noneOf a' <<< list (noneOf a')
  where
   a' = toCharArray a
   prs = hMap fromCharList
@@ -105,7 +105,7 @@ digits = many1Of "0123456789"
 -- int :: forall r. Unit -> StringBoomerang r (Int :- r)
 int :: forall r. Boomerang String r (Int :- r)
 int =
-  maph intPrs intSer `compose` digits
+  maph intPrs intSer <<< digits
  where
   intPrs :: String -> Int
   intPrs s = fromMaybe 0 (fromString s)
