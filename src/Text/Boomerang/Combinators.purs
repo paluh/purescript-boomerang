@@ -7,7 +7,7 @@ import Data.Tuple (Tuple(..))
 import Prelude (flip, id, pure, (<$>), (<>), (<<<))
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
-import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), HTop2)
+import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), (:-))
 
 pureBmgSer :: forall a b tok. (a -> Maybe b) -> Serializer tok a b
 pureBmgSer s = Serializer ((Tuple id <$> _) <$> s)
@@ -23,39 +23,39 @@ pureBmg p s =
   }
 
 maph :: forall h h' t tok. (h -> h') -> (h' -> Maybe h) ->
-                           Boomerang tok (HCons h t) (HCons h' t)
+                           Boomerang tok (h :- t) (h' :- t)
 maph p s =
   pureBmg prs ser
  where
-  prs :: HCons h t -> HCons h' t
+  prs :: h :- t -> h' :- t
   prs = hArg hCons p
 
-  ser :: HCons h' t -> Maybe (HCons h t)
+  ser :: h' :- t -> Maybe (h :- t)
   ser =
     hArg hCons' s
    where
-    hCons' :: forall a s. Maybe a -> s -> Maybe (HCons a s)
+    hCons' :: forall a s. Maybe a -> s -> Maybe (a :- s)
     hCons' mh t  = flip hCons t <$> mh
 
-nil :: forall t a tok. Boomerang tok t (HCons (List a) t)
+nil :: forall t a tok. Boomerang tok t (List a :- t)
 nil =
-  pureBmg (HCons Nil) ser
+  pureBmg ((:-) Nil) ser
  where
-  ser (HCons Nil t) = Just t
+  ser (Nil :- t) = Just t
   ser _ = Nothing
 
-cons :: forall tok a t. Boomerang tok (HTop2 a (List a) t) (HCons (List a) t)
+cons :: forall tok a t. Boomerang tok (HTop2 a (List a) t) (List a :- t)
 cons =
   pureBmg prs ser
  where
   prs = hArg hMap (\lh lt -> lh : lt)
-  ser (HCons (Cons lh lt) t) = Just (HCons lh (HCons lt t))
+  ser ((lh : lt) :- t) = Just (lh :- lt :- t)
   ser _ = Nothing
 
-list :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> Boomerang tok t (HCons (List a) t)
+list :: forall t a tok. (forall s. Boomerang tok s (a :- s)) -> Boomerang tok t (List a :- t)
 list b = (cons <<< b <<< defer (\_ -> list b)) <> nil
 
-listSep :: forall t a tok. (forall s. Boomerang tok s (HCons a s)) -> (forall r. Boomerang tok r r) -> Boomerang tok t (HCons (List a) t)
+listSep :: forall t a tok. (forall s. Boomerang tok s (a :- s)) -> (forall r. Boomerang tok r r) -> Boomerang tok t (List a :- t)
 listSep b s =
   (cons <<< b <<< defer (\_ -> sepList)) <> nil
  where
