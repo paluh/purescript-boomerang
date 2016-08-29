@@ -7,7 +7,7 @@ import Data.Tuple (Tuple(..))
 import Prelude (flip, id, pure, (<$>), (<>), (<<<))
 import Text.Parsing.Parser (Parser)
 import Text.Boomerang.Prim (Boomerang(..), Serializer(..))
-import Text.Boomerang.HStack (hArg, hCons, hMap, HCons(..), (:-))
+import Text.Boomerang.HStack (hArg, hCons, hMap, type (:-), (:-))
 
 pureBmgSer :: forall a b tok. (a -> Maybe b) -> Serializer tok a b
 pureBmgSer s = Serializer ((Tuple id <$> _) <$> s)
@@ -44,7 +44,7 @@ nil =
   ser (Nil :- t) = Just t
   ser _ = Nothing
 
-cons :: forall tok a t. Boomerang tok (HTop2 a (List a) t) (List a :- t)
+cons :: forall tok a t. Boomerang tok (a :- (List a) :- t) (List a :- t)
 cons =
   pureBmg prs ser
  where

@@ -12,12 +12,6 @@ class HList r
 instance hlistNil :: HList HNil
 instance hlistConst :: (HList t) => HList (a :- t)
 
-hTop2 :: forall a b t. a -> b -> t -> a :- b :- t
-hTop2 a b t = hCons a (hCons b t)
-
-hTop3 :: forall a b c t. a -> b -> c -> t -> a :- b :- c :- t
-hTop3 a b c t = hCons a (hTop2 b c t)
-
 hNil :: HNil
 hNil = HNil
 

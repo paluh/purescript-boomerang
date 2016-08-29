@@ -11,8 +11,7 @@ import Data.String (fromCharArray, toCharArray)
 import Prelude (bind, compose, const, id, not, pure,
                 show, (<$>), (<>), (<<<), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pureBmg)
-import Text.Boomerang.HStack (hCons, HCons(..), hHead, hMap,
-                              hNil, HNil, hSingleton)
+import Text.Boomerang.HStack (hCons, hHead, hMap, hNil, HNil, hSingleton, (:-), type (:-))
 import Text.Boomerang.Prim (Boomerang(..), runSerializer, Serializer(..))
 import Text.Parsing.Parser.String as Text.Parsing.Parser.String
 import Text.Parsing.Parser.String (eof)
@@ -28,38 +27,38 @@ lit s =
     , ser : Serializer (Just <<< Tuple (s <> _))
   }
 
-string :: forall r. String -> StringBoomerang r (HCons String r)
+string :: forall r. String -> StringBoomerang r (String :- r)
 string s =
   Boomerang {
       prs : (hCons <$> Text.Parsing.Parser.String.string s)
     , ser : Serializer ser
   }
  where
-  ser (HCons s' t) =
+  ser (s' :- t) =
     if s' == s
       then Just (Tuple (s <> _) t)
       else Nothing
 
-oneOf :: forall r. Array Char -> StringBoomerang r (HCons Char r)
+oneOf :: forall r. Array Char -> StringBoomerang r (Char :- r)
 oneOf a =
   Boomerang {
       prs : (hCons <$> Text.Parsing.Parser.String.oneOf a)
     , ser : Serializer ser
   }
  where
-  ser (HCons c t) =
+  ser (c :- t) =
     if c `elem` a
       then Just (Tuple (fromCharArray [c] <>  _) t)
       else Nothing
 
-noneOf :: forall r. Array Char -> StringBoomerang r (HCons Char r)
+noneOf :: forall r. Array Char -> StringBoomerang r (Char :- r)
 noneOf a =
   Boomerang {
       prs : (hCons <$> Text.Parsing.Parser.String.noneOf a)
     , ser : Serializer ser
   }
  where
-  ser (HCons c t) =
+  ser (c :- t) =
     if not (c `elem` a)
       then Just (Tuple (fromCharArray [c] <>  _) t)
       else Nothing
@@ -68,7 +67,7 @@ fromCharList :: forall f. Foldable f => f Char -> String
 fromCharList = fromCharArray <<< Data.Array.fromFoldable
 
 -- XXX: refactor this functions
-manyOf :: forall r. String -> StringBoomerang r (HCons String r)
+manyOf :: forall r. String -> StringBoomerang r (String :- r)
 manyOf a =
   pureBmg prs ser `compose` list (oneOf a')
  where
@@ -76,7 +75,7 @@ manyOf a =
   prs = hMap fromCharList
   ser h = Just (hMap (fromFoldable <<< toCharArray) h)
 
-many1Of :: forall r. String -> StringBoomerang r (HCons String r)
+many1Of :: forall r. String -> StringBoomerang r (String :- r)
 many1Of a =
   pureBmg prs ser `compose` cons `compose` oneOf a' `compose` list (oneOf a')
  where
@@ -84,7 +83,7 @@ many1Of a =
   prs = hMap fromCharList
   ser h = Just (hMap (fromFoldable <<< toCharArray) h)
 
-manyNoneOf :: forall r. String -> StringBoomerang r (HCons String r)
+manyNoneOf :: forall r. String -> StringBoomerang r (String :- r)
 manyNoneOf a =
   pureBmg prs ser <<< list (noneOf a')
  where
@@ -92,7 +91,7 @@ manyNoneOf a =
   prs = hMap fromCharList
   ser h = Just (hMap (fromFoldable <<< toCharArray) h)
 
-many1NoneOf :: forall r. String -> StringBoomerang r (HCons String r)
+many1NoneOf :: forall r. String -> StringBoomerang r (String :- r)
 many1NoneOf a =
   pureBmg prs ser `compose` cons `compose` noneOf a' `compose` list (noneOf a')
  where
@@ -100,11 +99,11 @@ many1NoneOf a =
   prs = hMap fromCharList
   ser h = Just (hMap (fromFoldable <<< toCharArray) h)
 
-digits :: forall r. StringBoomerang r (HCons String r)
+digits :: forall r. StringBoomerang r (String :- r)
 digits = many1Of "0123456789"
 
--- int :: forall r. Unit -> StringBoomerang r (HCons Int r)
-int :: forall r. Boomerang String r (HCons Int r)
+-- int :: forall r. Unit -> StringBoomerang r (Int :- r)
+int :: forall r. Boomerang String r (Int :- r)
 int =
   maph intPrs intSer `compose` digits
  where
@@ -114,7 +113,7 @@ int =
   intSer :: Int -> Maybe String
   intSer i = Just (show i)
 
-parse :: forall a. StringBoomerang HNil (HCons a HNil) -> String -> Maybe a
+parse :: forall a. StringBoomerang HNil (a :- HNil) -> String -> Maybe a
 parse (Boomerang b) s = do
   f <- hush (runParser s (do
     r <- b.prs
@@ -123,7 +122,7 @@ parse (Boomerang b) s = do
     pure r))
   pure (hHead (f hNil))
 
-serialize :: forall a. StringBoomerang HNil (HCons a HNil) -> a -> Maybe String
+serialize :: forall a. StringBoomerang HNil (a :- HNil) -> a -> Maybe String
 serialize (Boomerang b) s = do
   (Tuple f _) <- runSerializer b.ser (hSingleton s)
   pure (f "")

@@ -3,21 +3,20 @@ module Test.Text.Boomerang.String where
 import Data.Generic (class Generic, gEq, gShow)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
-import Prelude (class Eq, class Show, bind, compose, (<>), (==), (<<<))
+import Prelude (class Eq, class Show, bind, (==), (<<<), (<>))
 import Test.Unit (TestSuite, test)
 import Test.Unit as Test.Unit
 import Test.Unit.Assert (assert, equal)
 import Text.Boomerang.Combinators (cons, listSep, nil, opt, pureBmg)
-import Text.Boomerang.HStack (class HList, hArg, hCons, HCons(..), hTop2, HTop2)
+import Text.Boomerang.HStack (type (:-), hCons, hArg, (:-))
 import Text.Boomerang.String (int, lit, parse, serialize, string, StringBoomerang)
 
-join :: forall a b c. StringBoomerang b c -> StringBoomerang a b -> StringBoomerang a c
-join b1 b2 = b1 `compose` lit "/" `compose` b2
 
 data ProfileViewMode = Compact | Extended
 derive instance genericProfileViewMode :: Generic ProfileViewMode
 
-infixl 6 join as </>
+join :: forall a b c. StringBoomerang b c -> StringBoomerang a b -> StringBoomerang a c
+join b1 b2 = b1 <<< lit "/" <<< b2
 
 data Profile =
   Profile {
@@ -32,39 +31,39 @@ instance showProfile :: Show Profile where
 instance eqProfile :: Eq Profile where
   eq = gEq
 
-profileR :: forall r. (HList r) => StringBoomerang r (HCons Profile r)
+profileR :: forall r. StringBoomerang r (Profile :- r)
 profileR =
-  lit "profile" </> pR `compose` int </> pvR `compose` opt (lit "/")
+  lit "profile" `join` pR <<< int `join` pvR <<< opt (lit "/")
  where
   -- Profile route
-  pR :: forall t. StringBoomerang (HTop2 Int ProfileViewMode t) (HCons Profile t)
+  pR :: forall t. StringBoomerang (Int :- ProfileViewMode :- t) (Profile :- t)
   pR = pureBmg
     (hArg (hArg hCons) (\i v -> Profile { id : i, view : v}))
-    (\(HCons (Profile p) t) -> Just (hTop2 p.id p.view t))
+    (\(Profile p :- t) -> Just (p.id :- p.view :- t))
 
   -- ProfileView route
-  pvR :: forall t. StringBoomerang t (HCons ProfileViewMode t)
+  pvR :: forall t. StringBoomerang t (ProfileViewMode :- t)
   pvR =
-    vb `compose` (string "compact" <> string "extended")
+    vb <<< (string "compact" <> string "extended")
    where
     vb = pureBmg (hArg (hCons) (\s -> if s == "compact" then Compact else Extended)) ser
-    ser (HCons Compact t) = Just (hCons "compact" t)
-    ser (HCons Extended t) = Just (hCons "extended" t)
+    ser (Compact :- t) = Just (hCons "compact" t)
+    ser (Extended :- t) = Just (hCons "extended" t)
 
 suite :: forall a. TestSuite a
 suite = do
   test "String parsing" do
-    let foo = (string "foo" :: forall r. StringBoomerang r (HCons String r))
-        bar = (string "bar" :: forall r. StringBoomerang r (HCons String r))
+    let foo = (string "foo" :: forall r. StringBoomerang r (String :- r))
+        bar = (string "bar" :: forall r. StringBoomerang r (String :- r))
     equal (Just "foo") (parse foo "foo")
     equal Nothing (parse foo "bar")
 
   test "`parse` function consume whole input" do
-    let foo = (string "foo" :: forall r. StringBoomerang r (HCons String r))
+    let foo = (string "foo" :: forall r. StringBoomerang r (String :- r))
     equal Nothing (parse foo "foo-and-something-more")
 
   Test.Unit.suite "Basic composition with list aggregation" do
-    let fooBar = (cons `compose` string "foo" `compose` cons `compose` string "bar" `compose` nil)
+    let fooBar = (cons <<< string "foo" <<< cons <<< string "bar" <<< nil)
     test "parsing" do
       equal (Just ("foo":"bar":Nil)) (parse fooBar "foobar")
       equal Nothing (parse fooBar "barfoo")
