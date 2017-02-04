@@ -1,13 +1,17 @@
 module Test.Text.Boomerang.String where
 
 import Data.Generic (class Generic, gEq, gShow)
+import Data.Generic.Rep as Generic.Rep
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
+import Data.Semigroup ((<>))
+import Data.Symbol (SProxy(..))
 import Prelude (class Eq, class Show, bind, (==), (<<<), (<>))
-import Test.Unit (TestSuite, test)
 import Test.Unit as Test.Unit
+import Test.Unit (TestSuite, test)
 import Test.Unit.Assert (assert, equal)
 import Text.Boomerang.Combinators (cons, listSep, nil, opt, pureBmg)
+import Text.Boomerang.Generic (constructorBoomerang)
 import Text.Boomerang.HStack (type (:-), hCons, hArg, (:-))
 import Text.Boomerang.String (int, lit, parse, serialize, string, StringBoomerang)
 
@@ -49,6 +53,23 @@ profileR =
     vb = pureBmg (hArg (hCons) (\s -> if s == "compact" then Compact else Extended)) ser
     ser (Compact :- t) = Just (hCons "compact" t)
     ser (Extended :- t) = Just (hCons "extended" t)
+
+data Products
+  = Section Int
+  | Category Int
+derive instance eqProducts :: Eq Products
+derive instance genericProducts :: Generic Products
+derive instance genericrepProducts :: Generic.Rep.Generic Products _
+instance showProducts :: Show Products where
+  show = gShow
+
+sectionR :: forall r. StringBoomerang r (Products :- r)
+sectionR = constructorBoomerang (SProxy :: SProxy "Section") <<< lit "section-prefix" <<< lit "/" <<< int
+categoryR :: forall r. StringBoomerang r (Products :- r)
+categoryR = constructorBoomerang (SProxy :: SProxy "Category") <<< int
+
+productsR :: forall r. StringBoomerang r (Products :- r)
+productsR = sectionR <> categoryR
 
 suite :: forall a. TestSuite a
 suite = do
@@ -131,3 +152,14 @@ suite = do
     assert "profile route parsing without trailing slash"
       (parse profileR "profile/20/compact/" == Just profile)
     equal (Just "profile/20/compact/") (serialize profileR profile)
+
+  test "Products routes" do
+    let
+      section = Section 20
+      category = Category 30
+
+    equal (Just section) (parse productsR "section-prefix/20")
+    equal (Just category) (parse productsR "30")
+    -- assert "profile route parsing without trailing slash"
+    --   (parse profileR "profile/20/compact/" == Just profile)
+    -- equal (Just "profile/20/compact/") (serialize profileR profile)
