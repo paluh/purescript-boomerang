@@ -13,18 +13,15 @@ class ConstructorArgs rep (s :: Symbol) args | rep s -> args where
   repFromArgs :: SProxy s -> args -> rep
   repToArgs :: SProxy s -> rep -> Maybe args
 
-
 instance constructorArgs :: ConstructorArgs (Constructor s args) s args where
   repFromArgs _ args = Constructor args :: (Constructor s args)
   repToArgs _ (Constructor args) = Just args
-
 
 instance leftConstructorArgs :: ConstructorArgs (Sum (Constructor s args) b) s args where
   repFromArgs p args = Inl (Constructor args)
 
   repToArgs _ (Inl (Constructor args)) = Just args
   repToArgs _ _ = Nothing
-
 
 instance rightRecurseConstructorArgs :: (ConstructorArgs b s args) => ConstructorArgs (Sum a b) s args where
   repFromArgs p args = Inr (repFromArgs p args)
@@ -35,7 +32,6 @@ instance rightRecurseConstructorArgs :: (ConstructorArgs b s args) => Constructo
 class ArgsStack args stack r | stack -> r where
   fromStack :: stack -> { args :: args, stack :: r}
   toStack :: r -> args -> stack
-
 
 instance
   recurseArgsStack ::
@@ -49,11 +45,9 @@ instance
         }
   toStack stack (Product (Argument a) args) = a :- (toStack stack args)
 
-
 instance noargsArgsStack :: ArgsStack NoArguments r r where
   fromStack stack = { args: NoArguments, stack: stack }
   toStack stack NoArguments = stack
-
 
 instance singleArgsStack :: ArgsStack (Argument a) (a :- r) r where
   fromStack (a :- r) = { args: Argument a, stack: r }
@@ -74,7 +68,6 @@ constructorSerializer s =
     case repToArgs s (from t) of
       Just args -> Just (toStack r args)
       Nothing -> Nothing
-
 
 constructorParser ::
   forall args n r rep stack t tok.
