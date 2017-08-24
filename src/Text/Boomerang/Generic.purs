@@ -54,13 +54,12 @@ instance singleArgsStack :: ArgsStack (Argument a) (a :- r) r where
   toStack stack (Argument a) = a :- stack
 
 constructorSerializer ::
-  forall args n r rep stack t tok.
-    ( Generic t rep
-    , ArgsStack args stack r
-    , ConstructorArgs rep n args
-    ) =>
-      SProxy n ->
-      Serializer tok (t :- r) stack
+  forall args n r rep stack t tok
+    .  Generic t rep
+    => ArgsStack args stack r
+    => ConstructorArgs rep n args
+    => SProxy n
+    -> Serializer tok (t :- r) stack
 constructorSerializer s =
   pureBmgSer ser
  where
@@ -70,13 +69,12 @@ constructorSerializer s =
       Nothing -> Nothing
 
 constructorParser ::
-  forall args n r rep stack t tok.
-    ( Generic t rep
-    , ArgsStack args stack r
-    , ConstructorArgs rep n args
-    ) =>
-      SProxy n ->
-      (Parser tok (stack -> t :- r))
+  forall args n r rep stack t tok
+    . Generic t rep
+    => ArgsStack args stack r
+    => ConstructorArgs rep n args
+    => SProxy n
+    -> (Parser tok (stack -> t :- r))
 constructorParser s =
   pureBmgPrs f
  where
@@ -86,13 +84,12 @@ constructorParser s =
       (to $ repFromArgs s res.args) :- res.stack
 
 constructorBoomerang ::
-  forall args n r rep stack t tok.
-  ( Generic t rep
-  , ArgsStack args stack r
-  , ConstructorArgs rep n args
-  ) =>
-    SProxy n ->
-    Boomerang tok stack (t :- r)
+  forall args n r rep stack t tok
+  . Generic t rep
+  => ArgsStack args stack r
+  => ConstructorArgs rep n args
+  => SProxy n
+  -> Boomerang tok stack (t :- r)
 constructorBoomerang s = Boomerang
   { prs: constructorParser s
   , ser: constructorSerializer s

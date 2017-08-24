@@ -6,9 +6,9 @@ import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Semigroup ((<>))
 import Data.Symbol (SProxy(..))
-import Prelude (class Eq, class Show, bind, (==), (<<<), (<>))
-import Test.Unit as Test.Unit
+import Prelude
 import Test.Unit (TestSuite, test)
+import Test.Unit as Test.Unit
 import Test.Unit.Assert (assert, equal)
 import Text.Boomerang.Combinators (cons, listSep, nil, opt, pureBmg)
 import Text.Boomerang.Generic (constructorBoomerang)

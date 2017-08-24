@@ -6,16 +6,15 @@ import Data.Foldable (class Foldable, elem)
 import Data.Int (fromString)
 import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
-import Data.Tuple (Tuple(..))
 import Data.String (fromCharArray, toCharArray)
-import Prelude (bind, const, id, not, pure,
-                show, (<$>), (<>), (<<<), (==))
+import Data.Tuple (Tuple(..))
+import Prelude (bind, const, id, not, pure, show, (<$>), (<<<), (<>), (==))
 import Text.Boomerang.Combinators (cons, list, maph, pureBmg)
 import Text.Boomerang.HStack (hCons, hHead, hMap, hNil, HNil, hSingleton, (:-), type (:-))
 import Text.Boomerang.Prim (Boomerang(..), runSerializer, Serializer(..))
-import Text.Parsing.Parser.String as Text.Parsing.Parser.String
-import Text.Parsing.Parser.String (eof)
 import Text.Parsing.Parser (runParser)
+import Text.Parsing.Parser.String (eof)
+import Text.Parsing.Parser.String as Text.Parsing.Parser.String
 
 type StringBoomerang = Boomerang String
 
@@ -118,7 +117,7 @@ parse (Boomerang b) s = do
   f <- hush (runParser s (do
     r <- b.prs
     -- we have to consume whole input
-    eof
+    _ ← eof
     pure r))
   pure (hHead (f hNil))
 
