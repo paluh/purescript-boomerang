@@ -1,7 +1,7 @@
 {
   "name": "purescript-boomerang",
   "homepage": "https://github.com/paluh/purescript-boomerang",
-  "version": "1.2.2",
+  "version": "1.5.0",
   "description": "Purescript library for routing - port of haskell boomerang library",
   "keywords": [
     "purescript",
