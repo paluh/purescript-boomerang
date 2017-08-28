@@ -170,6 +170,3 @@ suite = do
 
     equal (Just section) (parse productsR "section-prefix/20")
     equal (Just category) (parse productsR "30")
-    -- assert "profile route parsing without trailing slash"
-    --   (parse profileR "profile/20/compact/" == Just profile)
-    -- equal (Just "profile/20/compact/") (serialize profileR profile)
