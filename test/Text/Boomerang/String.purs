@@ -1,16 +1,17 @@
 module Test.Text.Boomerang.String where
 
+import Prelude
+
 import Data.Generic (class Generic, gEq, gShow)
 import Data.Generic.Rep as Generic.Rep
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Semigroup ((<>))
 import Data.Symbol (SProxy(..))
-import Prelude
 import Test.Unit (TestSuite, test)
 import Test.Unit as Test.Unit
 import Test.Unit.Assert (assert, equal)
-import Text.Boomerang.Combinators (cons, listSep, nil, opt, pureBmg)
+import Text.Boomerang.Combinators (cons, eof, listSep, nil, opt, pureBmg)
 import Text.Boomerang.Generic (constructorBoomerang)
 import Text.Boomerang.HStack (type (:-), hCons, hArg, (:-))
 import Text.Boomerang.String (int, lit, parse, serialize, string, StringBoomerang)
@@ -78,6 +79,16 @@ suite = do
         bar = (string "bar" :: forall r. StringBoomerang r (String :- r))
     equal (Just "foo") (parse foo "foo")
     equal Nothing (parse foo "bar")
+  test "Alt branching is forced by internal eof" do
+    let foo = (string "fo" <<< eof) <> (string "foo" <<< eof) :: forall r. StringBoomerang r (String :- r)
+    equal (Just "foo") (parse foo "foo")
+    equal (Just "fo") (parse foo "fo")
+    equal Nothing (parse foo "fooo")
+  test "Alt branching is forced by external eof" do
+    let foo = ((string "fo" <> string "foo") <<< eof) :: forall r. StringBoomerang r (String :- r)
+    equal (Just "foo") (parse foo "foo")
+    equal (Just "fo") (parse foo "fo")
+    equal Nothing (parse foo "fooo")
 
   test "`parse` function consume whole input" do
     let foo = (string "foo" :: forall r. StringBoomerang r (String :- r))

@@ -8,7 +8,7 @@ import Data.List (fromFoldable)
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.String (fromCharArray, toCharArray)
 import Data.Tuple (Tuple(..))
-import Prelude (bind, const, id, not, pure, show, (<$>), (<<<), (<>), (==))
+import Prelude
 import Text.Boomerang.Combinators (cons, list, maph, pureBmg)
 import Text.Boomerang.HStack (hCons, hHead, hMap, hNil, HNil, hSingleton, (:-), type (:-))
 import Text.Boomerang.Prim (Boomerang(..), runSerializer, Serializer(..))
@@ -111,6 +111,7 @@ int =
 
   intSer :: Int -> Maybe String
   intSer i = Just (show i)
+
 
 parse :: forall a. StringBoomerang HNil (a :- HNil) -> String -> Maybe a
 parse (Boomerang b) s = do
