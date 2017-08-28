@@ -6,8 +6,7 @@ import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy)
 import Text.Boomerang.Combinators (pureBmgPrs, pureBmgSer)
 import Text.Boomerang.HStack (type (:-), (:-))
-import Text.Boomerang.Prim (Boomerang(Boomerang), Serializer)
-import Text.Parsing.Parser (Parser)
+import Text.Boomerang.Prim (Boomerang(Boomerang), Parsers, Serializer)
 
 class ConstructorArgs rep (s :: Symbol) args | rep s -> args where
   repFromArgs :: SProxy s -> args -> rep
@@ -74,7 +73,7 @@ constructorParser ::
     => ArgsStack args stack r
     => ConstructorArgs rep n args
     => SProxy n
-    -> (Parser tok (stack -> t :- r))
+    -> (Parsers tok (stack -> t :- r))
 constructorParser s =
   pureBmgPrs f
  where

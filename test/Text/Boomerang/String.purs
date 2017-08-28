@@ -80,19 +80,18 @@ suite = do
     equal (Just "foo") (parse foo "foo")
     equal Nothing (parse foo "bar")
   test "Alt branching is forced by internal eof" do
-    let foo = (string "fo" <<< eof) <> (string "foo" <<< eof) :: forall r. StringBoomerang r (String :- r)
+    let foo = ((string "fo" <<< eof) <> string "foo") :: forall r. StringBoomerang r (String :- r)
     equal (Just "foo") (parse foo "foo")
     equal (Just "fo") (parse foo "fo")
-    equal Nothing (parse foo "fooo")
-  test "Alt branching is forced by external eof" do
+    equal (Just "foo") (parse foo "fooo")
+  test "Whole input is consumed when forced by final eof" do
     let foo = ((string "fo" <> string "foo") <<< eof) :: forall r. StringBoomerang r (String :- r)
     equal (Just "foo") (parse foo "foo")
     equal (Just "fo") (parse foo "fo")
     equal Nothing (parse foo "fooo")
-
-  test "`parse` function consume whole input" do
+  test "`parse` function parses prefix match" do
     let foo = (string "foo" :: forall r. StringBoomerang r (String :- r))
-    equal Nothing (parse foo "foo-and-something-more")
+    equal (Just "foo") (parse foo "foo-and-something-more")
 
   Test.Unit.suite "Basic composition with list aggregation" do
     let fooBar = (cons <<< string "foo" <<< cons <<< string "bar" <<< nil)

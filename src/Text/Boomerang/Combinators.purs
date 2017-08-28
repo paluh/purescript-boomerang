@@ -3,20 +3,20 @@ module Text.Boomerang.Combinators where
 import Prelude
 
 import Control.Lazy (defer)
-import Control.Monad.State.Class (gets)
+import Control.Monad.State.Class (get, gets)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.Monoid (class Monoid, mempty)
 import Data.Profunctor.Strong (second)
 import Data.Tuple (Tuple(..))
 import Text.Boomerang.HStack (hArg, hCons, hMap, type (:-), (:-))
-import Text.Boomerang.Prim (runSerializer, Boomerang(..), Serializer(..))
-import Text.Parsing.Parser (ParseState(..), Parser, fail)
+import Text.Boomerang.Prim (runSerializer, Boomerang(..), Parsers(..), Serializer(..))
+import Text.Parsing.Parser (ParseState(..), fail)
 
 pureBmgSer :: forall a b tok. (a -> Maybe b) -> Serializer tok a b
 pureBmgSer s = Serializer ((Tuple id <$> _) <$> s)
 
-pureBmgPrs :: forall a b tok. (a -> b) -> Parser tok (a -> b)
+pureBmgPrs :: forall a b tok. (a -> b) -> Parsers tok (a -> b)
 pureBmgPrs p = pure p
 
 pureBmg :: forall a b tok. (a -> b) -> (b -> Maybe a) -> Boomerang tok a b
@@ -85,9 +85,9 @@ eof :: forall tok t. Monoid tok => Eq tok => Boomerang tok t t
 eof =
   Boomerang {
       prs : do
-        input <- gets \(ParseState input _ _) -> input
+        input <- gets (\(ParseState input _ _) -> input)
         if input == mempty
           then pure id
-          else (fail "Expected EOF")
+          else (Parsers (fail "Expected EOF"))
     , ser : Serializer (Just <<< Tuple (const mempty))
   }
