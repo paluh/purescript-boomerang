@@ -11,12 +11,12 @@ import Control.Monad.State (StateT(..), runStateT)
 import Control.Monad.State.Class (class MonadState)
 import Data.Either (Either(Left, Right))
 import Data.Filterable (partitionMap)
-import Data.List (List(Nil))
+import Data.List (List(Nil), (:))
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap)
 import Data.Tuple (Tuple(Tuple))
-import Text.Parsing.Parser (ParseError, ParseState(ParseState), ParserT(ParserT))
-import Text.Parsing.Parser.Pos (Position)
+import Text.Parsing.Parser (ParseError(..), ParseState(ParseState), ParserT(ParserT))
+import Text.Parsing.Parser.Pos (Position, initialPos)
 
 newtype Parsers tok a = Parsers (ParserT tok List a)
 derive instance newtypeParsers :: Newtype (Parsers tok a) _
@@ -56,6 +56,16 @@ runParsers' input pos prs =
  where
   p (Tuple (Right a) s) = Right <<< Tuple a $ s
   p (Tuple (Left e) s) = Left <<< Tuple e $ s
+
+parse1 ∷ ∀ a tok
+  . Parsers tok a
+  → tok
+  → Either ParseError a
+parse1 p tok =
+  case runParsers' tok initialPos p of
+    { left: _, right: (Tuple r _ : rs) } → Right r
+    { left: (Tuple e _ : es), right: Nil } → Left e
+    { left: Nil, right: Nil} → Left (ParseError "No parse result...?" initialPos)
 
 instance altParsers :: Alt (Parsers tok) where
   alt p1 p2 =
