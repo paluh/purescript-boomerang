@@ -29,7 +29,7 @@ What about serializer. With above approach to parsing we can easily reverse func
   (b, tok) -> (a, tok)
   ```
 
-It's funny that these types are really isomorphic, but the main "mechanical" difference is that "`tok` should grow" from left to right and `a` should be subpart of our staring `b`. What is even more important is that this type composes as easily as our parser type ;-)
+It's funny that these types are really isomorphic, but the main "mechanical" difference is that "`tok` should grow" from left to right and `a` should be subpart of our staring `b` in case of serializer. What is even more important is that this type composes as easily as our parser type because it is a simple function ;-)
 
 From these two types we can build our Boomerang type - it is just product of them. Let's write some real Purescript:
 
@@ -41,7 +41,7 @@ From these two types we can build our Boomerang type - it is just product of the
       }
   ```
 
-And we can compose them by composing `prs` and `ser` but in "different directions" (this is just "Product Category" AFAIK). Here is `Semigroupoid` instance:
+And we can compose them by composing `prs` and `ser` but in "different directions" (this is "Product Category" AFAIK). Here is `Semigroupoid` instance:
 
   ```purescript
   instance semigroupoidBoomerang :: Semigroupoid (Boomerang tok) where
@@ -66,7 +66,9 @@ Such a parser can be easily converted into previous form (but not other way arou
     in (a2b a, tok')
   ```
 
-This representation allows us to use standard `Parser` type (from `purescript-parsing`) - all we have is `type Parser tok a b = Parser tok (a -> b)`.
+This representation allows us to use standard `Parser` type (from `purescript-parsing`) - all we have is:
+
+`type Parser tok a b = Parser tok (a -> b)`.
 
 
 This library also uses different serializer type internally:
