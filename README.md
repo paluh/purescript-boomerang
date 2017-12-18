@@ -7,7 +7,7 @@ This library implements invertible parsers (it is clone of haskell boomerang lib
 
 This library is build upon really simple approach to parsers/serializers. I'm using Haskell tuple notation in following psudocode snippets to simplify reading.
 
-We can think of parser as a function which takes an input and result from provious step of parsing and gives back result and rest of the input:
+We can think of parsers as functions which take an input and result from provious steps of parsing and give back result and rest of the input:
 
   ```purescript
   prs :: (a, tok) -> (b, tok)
