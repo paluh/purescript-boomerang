@@ -13,7 +13,7 @@ We can think of parsers as functions which take an input and result from proviou
   prs :: (a, tok) -> (b, tok)
   ```
 
-So `tok` on the left hand side of function type represents input stream (for example `String` or list of `String`s) but on the right hand side it represents unconsumed part of the input.
+So `tok` on the left hand side of the function represents input stream (for example `String` or list of `String`s) but on the right hand side it represents unconsumed part of the input.
 `a` is a result from previous steps of parsing and `b` is a result of current parsing step build upon `a` value.
 
 This type is really general and composable - it composes just by function composition:
@@ -29,9 +29,9 @@ What about serializer. With above approach to parsing we can easily reverse func
   (b, tok) -> (a, tok)
   ```
 
-It's funny that these types are really isomorphic, but the main mechanical difference is that "`tok` should grow" from left to right and `a` should be subpart of our staring `b`. What is even more important is that this type composes as easily as our parsers ;-)
+It's funny that these types are really isomorphic, but the main "mechanical" difference is that "`tok` should grow" from left to right and `a` should be subpart of our staring `b`. What is even more important is that this type composes as easily as our parser type ;-)
 
-From these two types we can build our Boomerang type - let's write some real Purescript:
+From these two types we can build our Boomerang type - it is just product of them. Let's write some real Purescript:
 
   ```purescript
   newtype Boomerang tok a b =
