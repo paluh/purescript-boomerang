@@ -60,9 +60,9 @@ To be honest this library uses specialized version (so less powerfull) of parser
 Such a parser can be easily converted into previous form (but not other way around):
 
   ```
-  prs :: (tok, a) -> (tok, b)
-  prs (tok, a) =
-    let (a2b, tok') = prs' tok
+  prs :: (tok -> ((a -> b), tok)) -> ((tok, a) -> (tok, b))
+  prs p = \(tok, a) ->
+    let (a2b, tok') = p tok
     in (a2b a, tok')
   ```
 
@@ -80,8 +80,8 @@ This library also uses different serializer type internally:
 It also can be converted to our previous representation:
 
   ```
-  ser :: (tok, b) -> (tok, a)
-  ser (tok, b) =
-    let (tok2tok, a) = ser' b
+  ser :: (b -> ((tok -> tok), a)) -> ((tok, b) -> (tok, a))
+  ser s = \(tok, b) ->
+    let (tok2tok, a) = s b
     in (tok2tok tok, a)
   ```
