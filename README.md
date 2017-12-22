@@ -59,7 +59,7 @@ To be honest this library uses specialized version (so less powerfull) of parser
 
 Such a parser can be easily converted into previous form (but not other way around):
 
-  ```
+  ```purescript
   prs :: (tok -> ((a -> b), tok)) -> ((tok, a) -> (tok, b))
   prs p = \(tok, a) ->
     let (a2b, tok') = p tok
@@ -79,7 +79,7 @@ This library also uses different serializer type internally:
 
 It also can be converted to our previous representation:
 
-  ```
+  ```purescript
   ser :: (b -> ((tok -> tok), a)) -> ((tok, b) -> (tok, a))
   ser s = \(tok, b) ->
     let (tok2tok, a) = s b
