@@ -5,9 +5,9 @@ This library implements invertible parsers (it is clone of haskell boomerang lib
 
 ## Design
 
-This library is build upon really simple approach to parsers/serializers. I'm using Haskell tuple notation in following psudocode snippets to simplify reading.
+This library is build upon a really simple approach to parsers/serializers. I'm using Haskell tuple notation in the following psudocode snippets to simplify reading.
 
-We can think of parsers as functions which take an input and result from provious steps of parsing and give back result and rest of the input:
+We can think of parsers as a functions which take an input and result from the provious steps of parsing and give back the result and the rest of input:
 
   ```purescript
   prs :: (a, tok) -> (b, tok)
@@ -23,15 +23,15 @@ This type is really general and composable - it composes just by function compos
   ```
 What we really have here is a Kleisly Arrow of the well known and beloved monadic parser of type: `tok -> (a, tok)`.
 
-What about serializer. With above approach to parsing we can easily reverse function arrow and get:
+What about serializer. With the above approach to parsing we can easily reverse the function arrow and get:
 
   ```purescript
   (b, tok) -> (a, tok)
   ```
 
-It's funny that these types are really isomorphic, but the main "mechanical" difference is that "`tok` should grow" from left to right and `a` should be subpart of our staring `b` in case of serializer. What is even more important is that this type composes as easily as our parser type because it is a simple function ;-)
+These types are really isomorphic but the main "mechanical" difference is that "`tok` should grow" from left to right and `a` should be subpart of our staring `b` in the case of a serializer. What is even more important is that this type composes as easily as our parser type because it is also a simple function ;-)
 
-From these two types we can build our Boomerang type - it is just product of them. Let's write some real Purescript:
+From these two types we can build our Boomerang type - it is just a product of them. Let's write some real Purescript:
 
   ```purescript
   newtype Boomerang tok a b =
@@ -51,13 +51,13 @@ And we can compose them by composing `prs` and `ser` but in "different direction
         , ser: b2.ser <<< b1.ser
         }
   ```
-To be honest this library uses specialized version (so less powerfull) of parser type:
+To be honest this library uses specialized version (so less powerfull) of a parser type:
 
   ```purescript
   prs' :: tok -> ((a -> b), tok)
   ```
 
-Such a parser can be easily converted into previous form (but not other way around):
+Such a parser can be easily converted into previous form (but not the other way around):
 
   ```purescript
   prs :: (tok -> ((a -> b), tok)) -> ((tok, a) -> (tok, b))
@@ -77,7 +77,7 @@ This library also uses different serializer type internally:
   ser' :: b -> ((tok -> tok), a)
   ```
 
-It also can be converted to our previous representation:
+It can also be converted to our previous representation:
 
   ```purescript
   ser :: (b -> ((tok -> tok), a)) -> ((tok, b) -> (tok, a))
